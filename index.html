@@ -78,6 +78,14 @@
 <div class="results" id="results"></div>
 
 <script>
+const universities = [
+  {School: "Harvard University", "Scholarship Accessibility": 2, "Academic Quality":5, "Employment Opportunities":5, "Innovation & Modern Programs":5, "International Environment":5, "Research Activity":5, "Infrastructure & IT Support":5, "Sports & Campus Life":4, "Food & Dining Facilities":3, "Campus Environment":5},
+  {School: "MIT", "Scholarship Accessibility":2, "Academic Quality":5, "Employment Opportunities":5, "Innovation & Modern Programs":5, "International Environment":4, "Research Activity":5, "Infrastructure & IT Support":5, "Sports & Campus Life":3, "Food & Dining Facilities":3, "Campus Environment":4},
+  {School: "USP (University of São Paulo)", "Scholarship Accessibility":4, "Academic Quality":4, "Employment Opportunities":4, "Innovation & Modern Programs":3, "International Environment":3, "Research Activity":4, "Infrastructure & IT Support":3, "Sports & Campus Life":4, "Food & Dining Facilities":4, "Campus Environment":3},
+  {School: "Stanford University", "Scholarship Accessibility":3, "Academic Quality":5, "Employment Opportunities":5, "Innovation & Modern Programs":5, "International Environment":5, "Research Activity":5, "Infrastructure & IT Support":5, "Sports & Campus Life":4, "Food & Dining Facilities":4, "Campus Environment":5}
+  // ... add the rest of your CSV data here
+];
+
 const criteria = [
   "Scholarship Accessibility",
   "Academic Quality",
@@ -89,13 +97,6 @@ const criteria = [
   "Sports & Campus Life",
   "Food & Dining Facilities",
   "Campus Environment"
-];
-
-// Dummy university data
-const universities = [
-  {School: "Harvard University", "Scholarship Accessibility": 2, "Academic Quality":5, "Employment Opportunities":5, "Innovation & Modern Programs":5, "International Environment":5, "Research Activity":5, "Infrastructure & IT Support":5, "Sports & Campus Life":4, "Food & Dining Facilities":3, "Campus Environment":5},
-  {School: "USP", "Scholarship Accessibility":4, "Academic Quality":4, "Employment Opportunities":4, "Innovation & Modern Programs":3, "International Environment":3, "Research Activity":4, "Infrastructure & IT Support":3, "Sports & Campus Life":4, "Food & Dining Facilities":4, "Campus Environment":3},
-  {School: "MIT", "Scholarship Accessibility":2, "Academic Quality":5, "Employment Opportunities":5, "Innovation & Modern Programs":5, "International Environment":4, "Research Activity":5, "Infrastructure & IT Support":5, "Sports & Campus Life":3, "Food & Dining Facilities":3, "Campus Environment":4}
 ];
 
 // Generate stars for each criterion
@@ -124,7 +125,7 @@ document.querySelectorAll('.stars').forEach(starContainer => {
   });
 });
 
-// Matching function
+// Matching function with 5-star mandatory
 document.getElementById('findBtn').addEventListener('click', () => {
   const userPrefs = {};
   document.querySelectorAll('.stars').forEach(container => {
@@ -133,28 +134,41 @@ document.getElementById('findBtn').addEventListener('click', () => {
     userPrefs[crit] = filledStars;
   });
 
-  const matches = universities.map(u => {
-    let score = 0;
-    criteria.forEach(c => {
-      score += Math.abs(u[c] - userPrefs[c]);
-    });
-    return {...u, matchScore: score};
+  const mandatoryCriteria = criteria.filter(c => userPrefs[c] === 5);
+
+  const filtered = universities.filter(u => {
+    return mandatoryCriteria.every(c => u[c] === 5);
   });
 
-  matches.sort((a,b) => a.matchScore - b.matchScore);
-  const top3 = matches.slice(0,3);
-
-  // Display results
   const resultsDiv = document.getElementById('results');
   resultsDiv.innerHTML = "";
-  top3.forEach(u => {
-    const card = document.createElement('div');
-    card.className = "card";
-    card.innerHTML = `<h3>${u.School}</h3><p>Match Score: ${u.matchScore}</p>`;
-    resultsDiv.appendChild(card);
-  });
+
+  if(filtered.length === 0){
+    resultsDiv.innerHTML = "<p>No match found based on your 5-star preferences.</p>";
+  } else {
+    filtered.forEach(u => {
+      // Compute a simple utility score for non-5-star criteria
+      let score = 0;
+      criteria.forEach(c => {
+        if(userPrefs[c] !== 5){
+          score += Math.abs(u[c] - userPrefs[c]);
+        }
+      });
+      const card = document.createElement('div');
+      card.className = "card";
+      card.innerHTML = `<h3>${u.School}</h3><p>Utility Score: ${score}</p>`;
+      resultsDiv.appendChild(card);
+    });
+  }
+
+  // Add retry button
+  const retryBtn = document.createElement('button');
+  retryBtn.textContent = "Retry";
+  retryBtn.style = "margin-top:15px;padding:8px 16px;font-size:1rem;";
+  retryBtn.onclick = () => {
+    document.querySelectorAll('.star').forEach(s => s.classList.remove('filled'));
+    resultsDiv.innerHTML = "";
+  };
+  resultsDiv.appendChild(retryBtn);
 });
 </script>
-
-</body>
-</html>
