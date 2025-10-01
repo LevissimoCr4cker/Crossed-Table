@@ -78,6 +78,7 @@
 <div class="results" id="results"></div>
 
 <script>
+// University data
 const universities = [
   {School:"Harvard University","Scholarship Accessibility":2,"Academic Quality":5,"Employment Opportunities":5,"Innovation & Modern Programs":5,"International Environment":5,"Research Activity":5,"Infrastructure & IT Support":5,"Sports & Campus Life":4,"Food & Dining Facilities":3,"Campus Environment":5},
   {School:"MIT","Scholarship Accessibility":2,"Academic Quality":5,"Employment Opportunities":5,"Innovation & Modern Programs":5,"International Environment":4,"Research Activity":5,"Infrastructure & IT Support":5,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
@@ -130,8 +131,7 @@ const universities = [
   {School:"Pacific Leadership University","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":5,"Innovation & Modern Programs":4,"International Environment":5,"Research Activity":4,"Infrastructure & IT Support":4,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4}
 ];
 
-
-
+// Criteria
 const criteria = [
   "Scholarship Accessibility",
   "Academic Quality",
@@ -145,7 +145,7 @@ const criteria = [
   "Campus Environment"
 ];
 
-// Generate stars for each criterion
+// Generate star inputs
 const container = document.getElementById('criteria-container');
 criteria.forEach(c => {
   const div = document.createElement('div');
@@ -160,7 +160,7 @@ criteria.forEach(c => {
   container.appendChild(div);
 });
 
-// Star click interaction
+// Star click
 document.querySelectorAll('.stars').forEach(starContainer => {
   starContainer.addEventListener('click', e => {
     if(!e.target.classList.contains('star')) return;
@@ -171,7 +171,7 @@ document.querySelectorAll('.stars').forEach(starContainer => {
   });
 });
 
-// Matching function with 5-star mandatory
+// Find matches
 document.getElementById('findBtn').addEventListener('click', () => {
   const userPrefs = {};
   document.querySelectorAll('.stars').forEach(container => {
@@ -183,19 +183,15 @@ document.getElementById('findBtn').addEventListener('click', () => {
   const mandatoryCriteria = criteria.filter(c => userPrefs[c] === 5);
 
   const filtered = universities.filter(u => {
-  if(mandatoryCriteria.length === 0) return true; // no 5-star criteria
-  return mandatoryCriteria.every(c => u[c] === 5);
-}).map(u => {
-  // compute utility score (higher = better)
-  let score = 0;
-  criteria.forEach(c => {
-    if(userPrefs[c] !== 5){
-      score += 5 - Math.abs(u[c] - userPrefs[c]); 
-    }
-  });
-  return {...u, score};
-})
-.sort((a,b) => b.score - a.score); // sort descending
+    if(mandatoryCriteria.length === 0) return true;
+    return mandatoryCriteria.every(c => u[c] === 5);
+  }).map(u => {
+    let score = 0;
+    criteria.forEach(c => {
+      if(userPrefs[c] !== 5) score += 5 - Math.abs(u[c] - userPrefs[c]);
+    });
+    return {...u, score};
+  }).sort((a,b) => b.score - a.score);
 
   const resultsDiv = document.getElementById('results');
   resultsDiv.innerHTML = "";
@@ -204,21 +200,14 @@ document.getElementById('findBtn').addEventListener('click', () => {
     resultsDiv.innerHTML = "<p>No match found based on your 5-star preferences.</p>";
   } else {
     filtered.forEach(u => {
-      // Compute a simple utility score for non-5-star criteria
-      let score = 0;
-      criteria.forEach(c => {
-        if(userPrefs[c] !== 5){
-          score += Math.abs(u[c] - userPrefs[c]);
-        }
-      });
       const card = document.createElement('div');
       card.className = "card";
-      card.innerHTML = `<h3>${u.School}</h3><p>Utility Score: ${score}</p>`;
+      card.innerHTML = `<h3>${u.School}</h3><p>Match Score: ${u.score}</p>`;
       resultsDiv.appendChild(card);
     });
   }
 
-  // Add retry button
+  // Retry button
   const retryBtn = document.createElement('button');
   retryBtn.textContent = "Retry";
   retryBtn.style = "margin-top:15px;padding:8px 16px;font-size:1rem;";
@@ -229,3 +218,6 @@ document.getElementById('findBtn').addEventListener('click', () => {
   resultsDiv.appendChild(retryBtn);
 });
 </script>
+
+</body>
+</html>
