@@ -183,8 +183,19 @@ document.getElementById('findBtn').addEventListener('click', () => {
   const mandatoryCriteria = criteria.filter(c => userPrefs[c] === 5);
 
   const filtered = universities.filter(u => {
-    return mandatoryCriteria.every(c => u[c] === 5);
+  if(mandatoryCriteria.length === 0) return true; // no 5-star criteria
+  return mandatoryCriteria.every(c => u[c] === 5);
+}).map(u => {
+  // compute utility score (higher = better)
+  let score = 0;
+  criteria.forEach(c => {
+    if(userPrefs[c] !== 5){
+      score += 5 - Math.abs(u[c] - userPrefs[c]); 
+    }
   });
+  return {...u, score};
+})
+.sort((a,b) => b.score - a.score); // sort descending
 
   const resultsDiv = document.getElementById('results');
   resultsDiv.innerHTML = "";
