@@ -35,15 +35,13 @@
     display: inline-block;
   }
   .star {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     cursor: pointer;
     color: #ccc;
+    transition: color 0.2s;
   }
   .star.filled {
     color: #FFD700;
-  }
-  input[type=range] {
-    width: 100%;
   }
   .results {
     margin-top: 30px;
@@ -63,6 +61,9 @@
       font-size: 1.2rem;
       padding: 15px;
     }
+    .star {
+      font-size: 1.3rem;
+    }
   }
 </style>
 </head>
@@ -70,93 +71,89 @@
 
 <header>Find the School that Matches Your Interests</header>
 
-<div class="container">
+<div class="container" id="criteria-container"></div>
 
-  <!-- Criteria Sliders with Star Importance -->
-  <div class="criterion">
-    <label>Scholarship Accessibility:</label>
-    <div class="stars" id="scholarship-stars">
-      <span class="star" data-value="1">&#9733;</span>
-      <span class="star" data-value="2">&#9733;</span>
-      <span class="star" data-value="3">&#9733;</span>
-      <span class="star" data-value="4">&#9733;</span>
-      <span class="star" data-value="5">&#9733;</span>
-    </div>
-    <input type="range" min="0" max="5" value="3" id="scholarship">
-  </div>
+<button id="findBtn" style="padding:10px 20px;font-size:1rem;">Find Top Matches</button>
 
-  <div class="criterion">
-    <label>Academic Quality:</label>
-    <div class="stars" id="academic-stars">
-      <span class="star" data-value="1">&#9733;</span>
-      <span class="star" data-value="2">&#9733;</span>
-      <span class="star" data-value="3">&#9733;</span>
-      <span class="star" data-value="4">&#9733;</span>
-      <span class="star" data-value="5">&#9733;</span>
-    </div>
-    <input type="range" min="0" max="5" value="3" id="academic">
-  </div>
-
-  <!-- Add the rest of 8 criteria in the same format -->
-  <!-- For brevity, we’ll generate them dynamically in JS later -->
-
-  <button id="findBtn" style="padding:10px 20px;font-size:1rem;">Find Top Matches</button>
-
-  <div class="results" id="results"></div>
-</div>
+<div class="results" id="results"></div>
 
 <script>
-  // Dummy data
-  const universities = [
-    {School: "Harvard University", Scholarship: 2, Academic: 5, Employment: 5, Innovation: 5, International: 5, Research:5, Infrastructure:5, Sports:4, Food:3, Environment:5},
-    {School: "USP", Scholarship: 4, Academic: 4, Employment:4, Innovation:3, International:3, Research:4, Infrastructure:3, Sports:4, Food:4, Environment:3},
-    {School: "MIT", Scholarship: 2, Academic:5, Employment:5, Innovation:5, International:4, Research:5, Infrastructure:5, Sports:3, Food:3, Environment:4}
-  ];
+const criteria = [
+  "Scholarship Accessibility",
+  "Academic Quality",
+  "Employment Opportunities",
+  "Innovation & Modern Programs",
+  "International Environment",
+  "Research Activity",
+  "Infrastructure & IT Support",
+  "Sports & Campus Life",
+  "Food & Dining Facilities",
+  "Campus Environment"
+];
 
-  const criteria = ["Scholarship","Academic","Employment","Innovation","International","Research","Infrastructure","Sports","Food","Environment"];
+// Dummy university data
+const universities = [
+  {School: "Harvard University", "Scholarship Accessibility": 2, "Academic Quality":5, "Employment Opportunities":5, "Innovation & Modern Programs":5, "International Environment":5, "Research Activity":5, "Infrastructure & IT Support":5, "Sports & Campus Life":4, "Food & Dining Facilities":3, "Campus Environment":5},
+  {School: "USP", "Scholarship Accessibility":4, "Academic Quality":4, "Employment Opportunities":4, "Innovation & Modern Programs":3, "International Environment":3, "Research Activity":4, "Infrastructure & IT Support":3, "Sports & Campus Life":4, "Food & Dining Facilities":4, "Campus Environment":3},
+  {School: "MIT", "Scholarship Accessibility":2, "Academic Quality":5, "Employment Opportunities":5, "Innovation & Modern Programs":5, "International Environment":4, "Research Activity":5, "Infrastructure & IT Support":5, "Sports & Campus Life":3, "Food & Dining Facilities":3, "Campus Environment":4}
+];
 
-  // Star rating interaction
-  document.querySelectorAll('.stars').forEach(starContainer => {
-    starContainer.addEventListener('click', e => {
-      if(!e.target.classList.contains('star')) return;
-      const val = parseInt(e.target.dataset.value);
-      [...starContainer.children].forEach(star => {
-        star.classList.toggle('filled', parseInt(star.dataset.value) <= val);
-      });
+// Generate stars for each criterion
+const container = document.getElementById('criteria-container');
+criteria.forEach(c => {
+  const div = document.createElement('div');
+  div.className = 'criterion';
+  div.innerHTML = `<label>${c}:</label><div class="stars" data-criterion="${c}">
+    <span class="star" data-value="1">&#9733;</span>
+    <span class="star" data-value="2">&#9733;</span>
+    <span class="star" data-value="3">&#9733;</span>
+    <span class="star" data-value="4">&#9733;</span>
+    <span class="star" data-value="5">&#9733;</span>
+  </div>`;
+  container.appendChild(div);
+});
+
+// Star click interaction
+document.querySelectorAll('.stars').forEach(starContainer => {
+  starContainer.addEventListener('click', e => {
+    if(!e.target.classList.contains('star')) return;
+    const val = parseInt(e.target.dataset.value);
+    [...starContainer.children].forEach(star => {
+      star.classList.toggle('filled', parseInt(star.dataset.value) <= val);
     });
   });
+});
 
-  // Matching function
-  document.getElementById('findBtn').addEventListener('click', () => {
-    const userPrefs = {};
+// Matching function
+document.getElementById('findBtn').addEventListener('click', () => {
+  const userPrefs = {};
+  document.querySelectorAll('.stars').forEach(container => {
+    const crit = container.dataset.criterion;
+    const filledStars = container.querySelectorAll('.star.filled').length;
+    userPrefs[crit] = filledStars;
+  });
+
+  const matches = universities.map(u => {
+    let score = 0;
     criteria.forEach(c => {
-      const slider = document.getElementById(c.toLowerCase());
-      userPrefs[c] = parseInt(slider.value);
+      score += Math.abs(u[c] - userPrefs[c]);
     });
-
-    // Simple distance match
-    const matches = universities.map(u => {
-      let score = 0;
-      criteria.forEach(c => {
-        score += Math.abs(u[c] - userPrefs[c]);
-      });
-      return {...u, matchScore: score};
-    });
-
-    matches.sort((a,b) => a.matchScore - b.matchScore);
-    const top3 = matches.slice(0,3);
-
-    // Display results
-    const resultsDiv = document.getElementById('results');
-    resultsDiv.innerHTML = "";
-    top3.forEach(u => {
-      const card = document.createElement('div');
-      card.className = "card";
-      card.innerHTML = `<h3>${u.School}</h3><p>Match Score: ${u.matchScore}</p>`;
-      resultsDiv.appendChild(card);
-    });
+    return {...u, matchScore: score};
   });
 
+  matches.sort((a,b) => a.matchScore - b.matchScore);
+  const top3 = matches.slice(0,3);
+
+  // Display results
+  const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = "";
+  top3.forEach(u => {
+    const card = document.createElement('div');
+    card.className = "card";
+    card.innerHTML = `<h3>${u.School}</h3><p>Match Score: ${u.matchScore}</p>`;
+    resultsDiv.appendChild(card);
+  });
+});
 </script>
 
 </body>
