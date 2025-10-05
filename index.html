@@ -1,223 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Find the School that Matches Your Interests</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0; padding: 0;
-    background: #f5f5f5;
-    color: #333;
-  }
-  header {
-    text-align: center;
-    padding: 20px;
-    background: #4CAF50;
-    color: white;
-    font-size: 1.5rem;
-  }
-  .container {
-    padding: 20px;
-    max-width: 600px;
-    margin: auto;
-  }
-  .criterion {
-    margin-bottom: 20px;
-  }
-  .criterion label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-  }
-  .stars {
-    display: inline-block;
-  }
-  .star {
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #ccc;
-    transition: color 0.2s;
-  }
-  .star.filled {
-    color: #FFD700;
-  }
-  .results {
-    margin-top: 30px;
-  }
-  .card {
-    background: white;
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  }
-  .card h3 {
-    margin: 0 0 10px 0;
-  }
-  @media (max-width: 600px) {
-    header {
-      font-size: 1.2rem;
-      padding: 15px;
-    }
-    .star {
-      font-size: 1.3rem;
-    }
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find the School that Matches Your Interests</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <header>Find the School that Matches Your Interests</header>
+  <div class="container" id="criteria-container"></div>
+  <button id="findBtn" class="btn">Find Top Matches</button>
+  <div class="results" id="results"></div>
 
-<header>Find the School that Matches Your Interests</header>
+  <script>
+    // Criteria
+    const criteria = [
+      "Scholarship Accessibility",
+      "Academic Quality",
+      "Employment Opportunities",
+      "Innovation & Modern Programs",
+      "International Environment",
+      "Research Activity",
+      "Infrastructure & IT Support",
+      "Sports & Campus Life",
+      "Food & Dining Facilities",
+      "Campus Environment"
+    ];
 
-<div class="container" id="criteria-container"></div>
+    // Fetch university data
+    let universities = [];
+    fetch('data/schools.json')
+      .then(response => response.json())
+      .then(data => {
+        universities = data;
+        initializeCriteria();
+      })
+      .catch(error => {
+        console.error('Error fetching university data:', error);
+        document.getElementById('results').innerHTML = "<p>Error loading university data. Please try again later.</p>";
+      });
 
-<button id="findBtn" style="padding:10px 20px;font-size:1rem;">Find Top Matches</button>
+    // Generate star inputs
+    function initializeCriteria() {
+      const container = document.getElementById('criteria-container');
+      criteria.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'criterion';
+        div.innerHTML = `<label>${c}:</label><div class="stars" data-criterion="${c}">
+          <span class="star" data-value="1">&#9733;</span>
+          <span class="star" data-value="2">&#9733;</span>
+          <span class="star" data-value="3">&#9733;</span>
+          <span class="star" data-value="4">&#9733;</span>
+          <span class="star" data-value="5">&#9733;</span>
+        </div>`;
+        container.appendChild(div);
+      });
 
-<div class="results" id="results"></div>
+      // Star click
+      document.querySelectorAll('.stars').forEach(starContainer => {
+        starContainer.addEventListener('click', e => {
+          if (!e.target.classList.contains('star')) return;
+          const val = parseInt(e.target.dataset.value);
+          [...starContainer.children].forEach(star => {
+            star.classList.toggle('filled', parseInt(star.dataset.value) <= val);
+          });
+        });
+      });
+    }
 
-<script>
-// University data
-const universities = [
-  {School:"Harvard University","Scholarship Accessibility":2,"Academic Quality":5,"Employment Opportunities":5,"Innovation & Modern Programs":5,"International Environment":5,"Research Activity":5,"Infrastructure & IT Support":5,"Sports & Campus Life":4,"Food & Dining Facilities":3,"Campus Environment":5},
-  {School:"MIT","Scholarship Accessibility":2,"Academic Quality":5,"Employment Opportunities":5,"Innovation & Modern Programs":5,"International Environment":4,"Research Activity":5,"Infrastructure & IT Support":5,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"Stanford University","Scholarship Accessibility":3,"Academic Quality":5,"Employment Opportunities":5,"Innovation & Modern Programs":5,"International Environment":5,"Research Activity":5,"Infrastructure & IT Support":5,"Sports & Campus Life":4,"Food & Dining Facilities":4,"Campus Environment":5},
-  {School:"University of Oxford","Scholarship Accessibility":3,"Academic Quality":5,"Employment Opportunities":5,"Innovation & Modern Programs":4,"International Environment":5,"Research Activity":5,"Infrastructure & IT Support":4,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"University of Cambridge","Scholarship Accessibility":3,"Academic Quality":5,"Employment Opportunities":5,"Innovation & Modern Programs":4,"International Environment":5,"Research Activity":5,"Infrastructure & IT Support":4,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"ETH Zurich","Scholarship Accessibility":2,"Academic Quality":5,"Employment Opportunities":4,"Innovation & Modern Programs":5,"International Environment":5,"Research Activity":5,"Infrastructure & IT Support":5,"Sports & Campus Life":4,"Food & Dining Facilities":4,"Campus Environment":4},
-  {School:"USP (University of São Paulo)","Scholarship Accessibility":4,"Academic Quality":4,"Employment Opportunities":4,"Innovation & Modern Programs":3,"International Environment":3,"Research Activity":4,"Infrastructure & IT Support":3,"Sports & Campus Life":4,"Food & Dining Facilities":4,"Campus Environment":3},
-  {School:"Sorbonne University","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":3,"Innovation & Modern Programs":3,"International Environment":4,"Research Activity":4,"Infrastructure & IT Support":3,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"University of Tokyo","Scholarship Accessibility":2,"Academic Quality":5,"Employment Opportunities":4,"Innovation & Modern Programs":4,"International Environment":4,"Research Activity":5,"Infrastructure & IT Support":4,"Sports & Campus Life":3,"Food & Dining Facilities":4,"Campus Environment":3},
-  {School:"Local Polytechnic","Scholarship Accessibility":5,"Academic Quality":3,"Employment Opportunities":2,"Innovation & Modern Programs":2,"International Environment":2,"Research Activity":2,"Infrastructure & IT Support":2,"Sports & Campus Life":2,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"Global Tech Institute","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":5,"Innovation & Modern Programs":5,"International Environment":3,"Research Activity":4,"Infrastructure & IT Support":5,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"Northern Business School","Scholarship Accessibility":4,"Academic Quality":3,"Employment Opportunities":5,"Innovation & Modern Programs":3,"International Environment":2,"Research Activity":2,"Infrastructure & IT Support":3,"Sports & Campus Life":2,"Food & Dining Facilities":2,"Campus Environment":3},
-  {School:"Pacific Research University","Scholarship Accessibility":2,"Academic Quality":4,"Employment Opportunities":4,"Innovation & Modern Programs":5,"International Environment":4,"Research Activity":5,"Infrastructure & IT Support":4,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"Eastern Arts Academy","Scholarship Accessibility":5,"Academic Quality":3,"Employment Opportunities":2,"Innovation & Modern Programs":2,"International Environment":3,"Research Activity":1,"Infrastructure & IT Support":2,"Sports & Campus Life":3,"Food & Dining Facilities":4,"Campus Environment":4},
-  {School:"Continental University","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":4,"Innovation & Modern Programs":4,"International Environment":4,"Research Activity":4,"Infrastructure & IT Support":4,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"International Leadership College","Scholarship Accessibility":2,"Academic Quality":4,"Employment Opportunities":5,"Innovation & Modern Programs":4,"International Environment":5,"Research Activity":4,"Infrastructure & IT Support":4,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"National Technical University","Scholarship Accessibility":4,"Academic Quality":4,"Employment Opportunities":4,"Innovation & Modern Programs":5,"International Environment":3,"Research Activity":4,"Infrastructure & IT Support":5,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"Metropolitan State University","Scholarship Accessibility":5,"Academic Quality":3,"Employment Opportunities":3,"Innovation & Modern Programs":3,"International Environment":3,"Research Activity":3,"Infrastructure & IT Support":3,"Sports & Campus Life":3,"Food & Dining Facilities":4,"Campus Environment":3},
-  {School:"Capital City University","Scholarship Accessibility":4,"Academic Quality":3,"Employment Opportunities":3,"Innovation & Modern Programs":3,"International Environment":4,"Research Activity":3,"Infrastructure & IT Support":3,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"Southern Innovation Hub","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":4,"Innovation & Modern Programs":5,"International Environment":3,"Research Activity":4,"Infrastructure & IT Support":5,"Sports & Campus Life":2,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"Western Finance College","Scholarship Accessibility":3,"Academic Quality":3,"Employment Opportunities":5,"Innovation & Modern Programs":3,"International Environment":3,"Research Activity":2,"Infrastructure & IT Support":3,"Sports & Campus Life":2,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"Urban Science University","Scholarship Accessibility":2,"Academic Quality":5,"Employment Opportunities":4,"Innovation & Modern Programs":5,"International Environment":4,"Research Activity":5,"Infrastructure & IT Support":5,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"TechPioneers Academy","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":5,"Innovation & Modern Programs":5,"International Environment":3,"Research Activity":4,"Infrastructure & IT Support":5,"Sports & Campus Life":2,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"Global Business School","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":5,"Innovation & Modern Programs":3,"International Environment":4,"Research Activity":3,"Infrastructure & IT Support":4,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"Elite International College","Scholarship Accessibility":2,"Academic Quality":5,"Employment Opportunities":5,"Innovation & Modern Programs":4,"International Environment":5,"Research Activity":4,"Infrastructure & IT Support":4,"Sports & Campus Life":4,"Food & Dining Facilities":4,"Campus Environment":5},
-  {School:"Regional Arts Institute","Scholarship Accessibility":5,"Academic Quality":3,"Employment Opportunities":2,"Innovation & Modern Programs":2,"International Environment":3,"Research Activity":1,"Infrastructure & IT Support":2,"Sports & Campus Life":4,"Food & Dining Facilities":4,"Campus Environment":4},
-  {School:"State Polytechnic","Scholarship Accessibility":4,"Academic Quality":3,"Employment Opportunities":3,"Innovation & Modern Programs":3,"International Environment":3,"Research Activity":3,"Infrastructure & IT Support":3,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"Central University","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":4,"Innovation & Modern Programs":4,"International Environment":4,"Research Activity":4,"Infrastructure & IT Support":4,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"Northern Technical Institute","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":4,"Innovation & Modern Programs":5,"International Environment":3,"Research Activity":4,"Infrastructure & IT Support":5,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"Southern Commerce College","Scholarship Accessibility":4,"Academic Quality":3,"Employment Opportunities":5,"Innovation & Modern Programs":3,"International Environment":3,"Research Activity":2,"Infrastructure & IT Support":3,"Sports & Campus Life":2,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"Eastern Research University","Scholarship Accessibility":2,"Academic Quality":5,"Employment Opportunities":4,"Innovation & Modern Programs":5,"International Environment":4,"Research Activity":5,"Infrastructure & IT Support":5,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"Western Arts College","Scholarship Accessibility":5,"Academic Quality":3,"Employment Opportunities":2,"Innovation & Modern Programs":2,"International Environment":3,"Research Activity":1,"Infrastructure & IT Support":2,"Sports & Campus Life":4,"Food & Dining Facilities":4,"Campus Environment":4},
-  {School:"Innovation State University","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":4,"Innovation & Modern Programs":5,"International Environment":4,"Research Activity":5,"Infrastructure & IT Support":5,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"Metropolitan Technology Institute","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":5,"Innovation & Modern Programs":5,"International Environment":3,"Research Activity":4,"Infrastructure & IT Support":5,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"International Science Academy","Scholarship Accessibility":2,"Academic Quality":5,"Employment Opportunities":5,"Innovation & Modern Programs":5,"International Environment":5,"Research Activity":5,"Infrastructure & IT Support":5,"Sports & Campus Life":4,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"Global Commerce University","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":5,"Innovation & Modern Programs":3,"International Environment":4,"Research Activity":3,"Infrastructure & IT Support":4,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"Continental Arts College","Scholarship Accessibility":5,"Academic Quality":3,"Employment Opportunities":2,"Innovation & Modern Programs":2,"International Environment":3,"Research Activity":1,"Infrastructure & IT Support":2,"Sports & Campus Life":4,"Food & Dining Facilities":4,"Campus Environment":4},
-  {School:"Urban Innovation Hub","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":4,"Innovation & Modern Programs":5,"International Environment":3,"Research Activity":4,"Infrastructure & IT Support":5,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"Northern Leadership Institute","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":5,"Innovation & Modern Programs":4,"International Environment":5,"Research Activity":4,"Infrastructure & IT Support":4,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"Southern Technical University","Scholarship Accessibility":4,"Academic Quality":4,"Employment Opportunities":4,"Innovation & Modern Programs":5,"International Environment":3,"Research Activity":4,"Infrastructure & IT Support":5,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"Eastern Finance Academy","Scholarship Accessibility":3,"Academic Quality":3,"Employment Opportunities":5,"Innovation & Modern Programs":3,"International Environment":3,"Research Activity":2,"Infrastructure & IT Support":3,"Sports & Campus Life":2,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"Western Science University","Scholarship Accessibility":2,"Academic Quality":5,"Employment Opportunities":5,"Innovation & Modern Programs":5,"International Environment":4,"Research Activity":5,"Infrastructure & IT Support":5,"Sports & Campus Life":4,"Food & Dining Facilities":3,"Campus Environment":4},
-  {School:"Capital Arts Institute","Scholarship Accessibility":5,"Academic Quality":3,"Employment Opportunities":2,"Innovation & Modern Programs":2,"International Environment":3,"Research Activity":1,"Infrastructure & IT Support":2,"Sports & Campus Life":4,"Food & Dining Facilities":4,"Campus Environment":4},
-  {School:"Global Tech College","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":5,"Innovation & Modern Programs":5,"International Environment":3,"Research Activity":4,"Infrastructure & IT Support":5,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"International Innovation University","Scholarship Accessibility":2,"Academic Quality":5,"Employment Opportunities":5,"Innovation & Modern Programs":5,"International Environment":5,"Research Activity":5,"Infrastructure & IT Support":4,"Sports & Campus Life":3,"Food & Dining Facilities":5,"Campus Environment":5},
-  {School:"National Business Academy","Scholarship Accessibility":4,"Academic Quality":3,"Employment Opportunities":5,"Innovation & Modern Programs":3,"International Environment":3,"Research Activity":2,"Infrastructure & IT Support":3,"Sports & Campus Life":2,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"Regional Science Institute","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":4,"Innovation & Modern Programs":5,"International Environment":3,"Research Activity":4,"Infrastructure & IT Support":5,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":3},
-  {School:"Metropolitan Arts College","Scholarship Accessibility":5,"Academic Quality":3,"Employment Opportunities":2,"Innovation & Modern Programs":2,"International Environment":3,"Research Activity":1,"Infrastructure & IT Support":2,"Sports & Campus Life":4,"Food & Dining Facilities":4,"Campus Environment":4},
-  {School:"Pacific Leadership University","Scholarship Accessibility":3,"Academic Quality":4,"Employment Opportunities":5,"Innovation & Modern Programs":4,"International Environment":5,"Research Activity":4,"Infrastructure & IT Support":4,"Sports & Campus Life":3,"Food & Dining Facilities":3,"Campus Environment":4}
-];
+    // Find matches
+    document.getElementById('findBtn').addEventListener('click', () => {
+      const userPrefs = {};
+      document.querySelectorAll('.stars').forEach(container => {
+        const crit = container.dataset.criterion;
+        const filledStars = container.querySelectorAll('.star.filled').length;
+        userPrefs[crit] = filledStars;
+      });
 
-// Criteria
-const criteria = [
-  "Scholarship Accessibility",
-  "Academic Quality",
-  "Employment Opportunities",
-  "Innovation & Modern Programs",
-  "International Environment",
-  "Research Activity",
-  "Infrastructure & IT Support",
-  "Sports & Campus Life",
-  "Food & Dining Facilities",
-  "Campus Environment"
-];
+      const mandatoryCriteria = criteria.filter(c => userPrefs[c] === 5);
 
-// Generate star inputs
-const container = document.getElementById('criteria-container');
-criteria.forEach(c => {
-  const div = document.createElement('div');
-  div.className = 'criterion';
-  div.innerHTML = `<label>${c}:</label><div class="stars" data-criterion="${c}">
-    <span class="star" data-value="1">&#9733;</span>
-    <span class="star" data-value="2">&#9733;</span>
-    <span class="star" data-value="3">&#9733;</span>
-    <span class="star" data-value="4">&#9733;</span>
-    <span class="star" data-value="5">&#9733;</span>
-  </div>`;
-  container.appendChild(div);
-});
+      const filtered = universities
+        .filter(u => {
+          if (mandatoryCriteria.length === 0) return true;
+          return mandatoryCriteria.every(c => u[c] === 5);
+        })
+        .map(u => {
+          let score = 0;
+          criteria.forEach(c => {
+            if (userPrefs[c] !== 5) {
+              score += 5 - Math.abs(u[c] - userPrefs[c]);
+            }
+          });
+          return { ...u, score };
+        })
+        .sort((a, b) => b.score - a.score);
 
-// Star click
-document.querySelectorAll('.stars').forEach(starContainer => {
-  starContainer.addEventListener('click', e => {
-    if(!e.target.classList.contains('star')) return;
-    const val = parseInt(e.target.dataset.value);
-    [...starContainer.children].forEach(star => {
-      star.classList.toggle('filled', parseInt(star.dataset.value) <= val);
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = "";
+
+      if (filtered.length === 0) {
+        resultsDiv.innerHTML = "<p>No match found based on your 5-star preferences.</p>";
+      } else {
+        filtered.forEach(u => {
+          const card = document.createElement('div');
+          card.className = "card";
+          card.innerHTML = `<h3>${u.School}</h3><p>Match Score: ${u.score}</p>`;
+          resultsDiv.appendChild(card);
+        });
+      }
+
+      // Retry button
+      const retryBtn = document.createElement('button');
+      retryBtn.textContent = "Retry";
+      retryBtn.className = "btn retry-btn";
+      retryBtn.onclick = () => {
+        document.querySelectorAll('.star').forEach(s => s.classList.remove('filled'));
+        resultsDiv.innerHTML = "";
+      };
+      resultsDiv.appendChild(retryBtn);
     });
-  });
-});
-
-// Find matches
-document.getElementById('findBtn').addEventListener('click', () => {
-  const userPrefs = {};
-  document.querySelectorAll('.stars').forEach(container => {
-    const crit = container.dataset.criterion;
-    const filledStars = container.querySelectorAll('.star.filled').length;
-    userPrefs[crit] = filledStars;
-  });
-
-  const mandatoryCriteria = criteria.filter(c => userPrefs[c] === 5);
-
-  const filtered = universities.filter(u => {
-    if(mandatoryCriteria.length === 0) return true;
-    return mandatoryCriteria.every(c => u[c] === 5);
-  }).map(u => {
-    let score = 0;
-    criteria.forEach(c => {
-      if(userPrefs[c] !== 5) score += 5 - Math.abs(u[c] - userPrefs[c]);
-    });
-    return {...u, score};
-  }).sort((a,b) => b.score - a.score);
-
-  const resultsDiv = document.getElementById('results');
-  resultsDiv.innerHTML = "";
-
-  if(filtered.length === 0){
-    resultsDiv.innerHTML = "<p>No match found based on your 5-star preferences.</p>";
-  } else {
-    filtered.forEach(u => {
-      const card = document.createElement('div');
-      card.className = "card";
-      card.innerHTML = `<h3>${u.School}</h3><p>Match Score: ${u.score}</p>`;
-      resultsDiv.appendChild(card);
-    });
-  }
-
-  // Retry button
-  const retryBtn = document.createElement('button');
-  retryBtn.textContent = "Retry";
-  retryBtn.style = "margin-top:15px;padding:8px 16px;font-size:1rem;";
-  retryBtn.onclick = () => {
-    document.querySelectorAll('.star').forEach(s => s.classList.remove('filled'));
-    resultsDiv.innerHTML = "";
-  };
-  resultsDiv.appendChild(retryBtn);
-});
-</script>
-
+  </script>
 </body>
 </html>
