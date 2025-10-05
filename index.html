@@ -46,12 +46,12 @@
       criteria.forEach(c => {
         const div = document.createElement('div');
         div.className = 'criterion';
-        div.innerHTML = `<label>${c}:</label><div class="stars" data-criterion="${c}">
-          <span class="star" data-value="1">&#9733;</span>
-          <span class="star" data-value="2">&#9733;</span>
-          <span class="star" data-value="3">&#9733;</span>
-          <span class="star" data-value="4">&#9733;</span>
-          <span class="star" data-value="5">&#9733;</span>
+        div.innerHTML = `<label for="${c.replace(/\s+/g, '-')}-stars">${c}:</label><div class="stars" data-criterion="${c}" id="${c.replace(/\s+/g, '-')}-stars">
+          <span class="star" data-value="1" role="button" aria-label="1 star for ${c}">&#9733;</span>
+          <span class="star" data-value="2" role="button" aria-label="2 stars for ${c}">&#9733;</span>
+          <span class="star" data-value="3" role="button" aria-label="3 stars for ${c}">&#9733;</span>
+          <span class="star" data-value="4" role="button" aria-label="4 stars for ${c}">&#9733;</span>
+          <span class="star" data-value="5" role="button" aria-label="5 stars for ${c}">&#9733;</span>
         </div>`;
         container.appendChild(div);
       });
@@ -104,7 +104,12 @@
         filtered.forEach(u => {
           const card = document.createElement('div');
           card.className = "card";
-          card.innerHTML = `<h3>${u.School}</h3><p>Match Score: ${u.score}</p>`;
+          let criteriaHTML = '<ul>';
+          criteria.forEach(c => {
+            criteriaHTML += `<li>${c}: ${u[c]} stars</li>`;
+          });
+          criteriaHTML += '</ul>';
+          card.innerHTML = `<h3>${u.School}</h3>${criteriaHTML}<p>Match Score: ${u.score}</p>`;
           resultsDiv.appendChild(card);
         });
       }
@@ -113,6 +118,8 @@
       const retryBtn = document.createElement('button');
       retryBtn.textContent = "Retry";
       retryBtn.className = "btn retry-btn";
+      retryBtn.setAttribute('aria-label', 'Retry selection');
+      retryBtn.setAttribute('role', 'button');
       retryBtn.onclick = () => {
         document.querySelectorAll('.star').forEach(s => s.classList.remove('filled'));
         resultsDiv.innerHTML = "";
