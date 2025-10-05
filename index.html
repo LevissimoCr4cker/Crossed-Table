@@ -78,6 +78,10 @@
       });
 
       const mandatoryCriteria = criteria.filter(c => userPrefs[c] === 5);
+      const fourStarCriteria = criteria.filter(c => userPrefs[c] === 4);
+      const threeStarCriteria = criteria.filter(c => userPrefs[c] === 3);
+      const twoStarCriteria = criteria.filter(c => userPrefs[c] === 2);
+      const oneStarCriteria = criteria.filter(c => userPrefs[c] === 1);
 
       const filtered = universities
         .filter(u => {
@@ -85,15 +89,28 @@
           return mandatoryCriteria.every(c => u[c] === 5);
         })
         .map(u => {
+          // Calculate scores for each priority level
+          const fourStarScore = fourStarCriteria.reduce((sum, c) => sum + u[c], 0);
+          const threeStarScore = threeStarCriteria.reduce((sum, c) => sum + u[c], 0);
+          const twoStarScore = twoStarCriteria.reduce((sum, c) => sum + u[c], 0);
+          const oneStarScore = oneStarCriteria.reduce((sum, c) => sum + u[c], 0);
+          // Calculate original match score for display
           let score = 0;
           criteria.forEach(c => {
             if (userPrefs[c] !== 5) {
               score += 5 - Math.abs(u[c] - userPrefs[c]);
             }
           });
-          return { ...u, score };
+          return { ...u, fourStarScore, threeStarScore, twoStarScore, oneStarScore, score };
         })
-        .sort((a, b) => b.score - a.score);
+        .sort((a, b) => {
+          // Sort by 4-star score, then 3-star, 2-star, 1-star, then original score
+          if (a.fourStarScore !== b.fourStarScore) return b.fourStarScore - a.fourStarScore;
+          if (a.threeStarScore !== b.threeStarScore) return b.threeStarScore - a.threeStarScore;
+          if (a.twoStarScore !== b.twoStarScore) return b.twoStarScore - a.twoStarScore;
+          if (a.oneStarScore !== b.oneStarScore) return b.oneStarScore - a.oneStarScore;
+          return b.score - a.score; // Tiebreaker: original match score
+        });
 
       const resultsDiv = document.getElementById('results');
       resultsDiv.innerHTML = "";
@@ -107,10 +124,10 @@
           let criteriaHTML = '<ul>';
           criteria.forEach(c => {
             const stars = '★'.repeat(u[c]) + '☆'.repeat(5 - u[c]);
-            criteriaHTML += `<li>${c}: <span class="result-stars">${stars}</span></li>`;
+            criteriaHTML += `<li>${c}: <span class="result-stars${userPrefs[c] === 5 ? ' mandatory' : userPrefs[c] === 4 ? ' four-star' : ''}">${stars}</span><span class="sr-only"> (${u[c]} stars)</span></li>`;
           });
           criteriaHTML += '</ul>';
-          card.innerHTML = `<h3>${u.School}</h3>${criteriaHTML}<p>Match Score: ${u.score}</p>`;
+          card.innerHTML = `<h3>${u.School}</h3>${criteriaHTML}<p>Similarity Score: ${u.score} | 4-Star Priority Score: ${u.fourStarScore}</p>`;
           resultsDiv.appendChild(card);
         });
       }
