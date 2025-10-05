@@ -30,26 +30,6 @@ header {
   font-weight: bold;
 }
 
-
-.btn {
-  padding: 10px 20px;
-  font-size: 1rem;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn:hover {
-  background-color: #45a049;
-}
-
-.retry-btn {
-  margin-top: 15px;
-  padding: 8px 16px;
-}
 .stars {
   display: inline-block;
 }
@@ -81,6 +61,54 @@ header {
   margin: 0 0 10px 0;
 }
 
+.card ul {
+  padding-left: 20px;
+  margin: 10px 0;
+  list-style-type: disc;
+}
+
+.card li {
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+}
+
+.result-stars {
+  font-size: 0.8rem; /* Smaller size for result stars */
+  color: #FFD700; /* Gold for filled stars */
+  -webkit-text-stroke: 0.5px black; /* Black outline for WebKit browsers */
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* Fallback for other browsers */
+}
+
+.result-stars::after {
+  color: #ccc; /* Gray for unfilled stars */
+  -webkit-text-stroke: 0.5px black; /* Black outline for unfilled stars */
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+.btn {
+  padding: 10px 20px;
+  font-size: 1rem;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn:hover {
+  background-color: #45a049;
+}
+
+.btn:active {
+  background-color: #3d8b40;
+}
+
+.retry-btn {
+  margin-top: 15px;
+  padding: 8px 16px;
+}
+
 @media (max-width: 600px) {
   header {
     font-size: 1.2rem;
@@ -89,5 +117,27 @@ header {
 
   .star {
     font-size: 1.3rem;
+    padding: 5px; /* Improved touch target */
+  }
+
+  .card {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+
+  .card h3 {
+    font-size: 1.1rem;
+  }
+
+  .card ul {
+    padding-left: 15px;
+  }
+
+  .card li {
+    font-size: 0.85rem;
+  }
+
+  .result-stars {
+    font-size: 0.7rem; /* Even smaller on mobile */
   }
 }
