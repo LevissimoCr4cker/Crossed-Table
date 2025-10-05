@@ -85,6 +85,24 @@ header {
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 }
 
+.result-stars.mandatory {
+  font-weight: bold; /* Emphasize 5-star criteria */
+}
+
+.result-stars.four-star {
+  color: #FFA500; /* Orange for 4-star criteria */
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
 .btn {
   padding: 10px 20px;
   font-size: 1rem;
