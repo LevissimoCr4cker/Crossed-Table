@@ -177,66 +177,35 @@ document.getElementById('findBtn').addEventListener('click', () => {
   document.querySelectorAll('.stars').forEach(container => {
     const crit = container.dataset.criterion;
     const filledStars = container.querySelectorAll('.star.filled').length;
-    userPrefs[crit] = filledStars || 0;
+    userPrefs[crit] = filledStars;
   });
 
   const mandatoryCriteria = criteria.filter(c => userPrefs[c] === 5);
 
-  // Filter schools that meet all 5-star must-haves
-  let filtered = universities.filter(u => {
-    if (mandatoryCriteria.length === 0) return true;
+  const filtered = universities.filter(u => {
+    if(mandatoryCriteria.length === 0) return true;
     return mandatoryCriteria.every(c => u[c] === 5);
-  });
-
-  // If no school matches all must-haves, show closest ones anyway
-  if (filtered.length === 0) filtered = universities;
-
-  // Calculate similarity score for each school
-  const scored = filtered.map(u => {
+  }).map(u => {
     let score = 0;
     criteria.forEach(c => {
-      const diff = Math.abs(u[c] - userPrefs[c]);
-      score += (5 - diff); // closer = higher score
+      if(userPrefs[c] !== 5) score += 5 - Math.abs(u[c] - userPrefs[c]);
     });
-    return { ...u, matchScore: score };
-  }).sort((a, b) => b.matchScore - a.matchScore);
+    return {...u, score};
+  }).sort((a,b) => b.score - a.score);
 
-  // Display results
   const resultsDiv = document.getElementById('results');
   resultsDiv.innerHTML = "";
 
-  if (scored.length === 0) {
-    resultsDiv.innerHTML = "<p>No match found based on your preferences.</p>";
+  if(filtered.length === 0){
+    resultsDiv.innerHTML = "<p>No match found based on your 5-star preferences.</p>";
   } else {
-    const topScore = scored[0].matchScore;
-    scored.forEach((u, i) => {
+    filtered.forEach(u => {
       const card = document.createElement('div');
       card.className = "card";
-      card.innerHTML = `
-        <h3>${i === 0 ? "🏆 " : ""}${u.School}</h3>
-        <p>Match Score: ${u.matchScore}</p>
-        <details>
-          <summary>View criteria</summary>
-          <ul style="margin-top:8px;">
-            ${criteria.map(c => `<li>${c}: ${u[c]}/5</li>`).join('')}
-          </ul>
-        </details>
-      `;
+      card.innerHTML = `<h3>${u.School}</h3><p>Match Score: ${u.score}</p>`;
       resultsDiv.appendChild(card);
     });
   }
-
-  // Retry button
-  const retryBtn = document.createElement('button');
-  retryBtn.textContent = "Retry";
-  retryBtn.style = "margin-top:15px;padding:8px 16px;font-size:1rem;";
-  retryBtn.onclick = () => {
-    document.querySelectorAll('.star').forEach(s => s.classList.remove('filled'));
-    resultsDiv.innerHTML = "";
-  };
-  resultsDiv.appendChild(retryBtn);
-});
-
 
   // Retry button
   const retryBtn = document.createElement('button');
