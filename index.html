@@ -106,7 +106,8 @@
           card.className = "card";
           let criteriaHTML = '<ul>';
           criteria.forEach(c => {
-            criteriaHTML += `<li>${c}: ${u[c]} stars</li>`;
+            const stars = '★'.repeat(u[c]) + '☆'.repeat(5 - u[c]);
+            criteriaHTML += `<li>${c}: <span class="result-stars">${stars}</span></li>`;
           });
           criteriaHTML += '</ul>';
           card.innerHTML = `<h3>${u.School}</h3>${criteriaHTML}<p>Match Score: ${u.score}</p>`;
