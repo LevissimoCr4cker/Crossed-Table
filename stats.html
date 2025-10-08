@@ -1,260 +1,125 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🏫 Weighted School Ranking</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f6f6f8;
-    margin: 40px;
-  }
-  h1 { text-align: center; }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 25px;
-  }
-  th, td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: center;
-  }
-  th { background: #eee; }
-  #upload, #addSchool {
-    margin-top: 10px;
-  }
-  .input-box {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-top: 10px;
-  }
-  .input-box input {
-    width: 70px;
-    padding: 5px;
-  }
-  .btn {
-    padding: 8px 16px;
-    background-color: #0078d7;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  .btn:hover { background-color: #005fa3; }
-  canvas {
-    margin-top: 40px;
-    width: 100% !important;
-    height: 400px !important;
-  }
-</style>
-</head>
-<body>
-
 <h1>Weighted School Ranking</h1>
 
-<h3>School Classification</h3>
-<div id="school-data"></div>
-
-<script>
-async function loadCSV() {
-  const response = await fetch('data.csv'); // must be served by your server
-  const text = await response.text();
-
-  const lines = text.split('\n');
-  const headers = lines[0].split(',');
-
-  const data = lines.slice(1).map(line => {
-    const values = line.split(',');
-    const obj = {};
-    headers.forEach((h, i) => obj[h] = values[i]);
-    return obj;
-  });
-
-  // Example: show data in table
-  let html = '<table border="1"><tr>';
-  headers.forEach(h => html += `<th>${h}</th>`);
-  html += '</tr>';
-
-  data.forEach(row => {
-    html += '<tr>';
-    headers.forEach(h => html += `<td>${row[h]}</td>`);
-    html += '</tr>';
-  });
-  html += '</table>';
-
-  document.getElementById('school-data').innerHTML = html;
-
-  return data; // if you want to use it for charts/graphs
-}
-
-loadCSV();
-</script>
-  
 <h3>Add Your Own School (51st)</h3>
 <div class="input-box" id="customInputs">
   <input type="text" id="schoolName" placeholder="School Name">
   <input type="number" min="1" max="5" placeholder="Scholarship" id="scholarship">
-  <input type="number" min="1" max="5" placeholder="Academic" id="academic">
-  <input type="number" min="1" max="5" placeholder="Employment" id="employment">
-  <input type="number" min="1" max="5" placeholder="Innovation" id="innovation">
-  <input type="number" min="1" max="5" placeholder="International" id="international">
-  <input type="number" min="1" max="5" placeholder="Research" id="research">
-  <input type="number" min="1" max="5" placeholder="Infrastructure" id="infrastructure">
-  <input type="number" min="1" max="5" placeholder="Sports" id="sports">
-  <input type="number" min="1" max="5" placeholder="Food" id="food">
-  <input type="number" min="1" max="5" placeholder="Environment" id="environment">
+  <input type="number" min="1" max="5" placeholder="academic" id="academic">
+  <input type="number" min="1" max="5" placeholder="employment" id="employment">
+  <input type="number" min="1" max="5" placeholder="innovation" id="innovation">
+  <input type="number" min="1" max="5" placeholder="international" id="international">
+  <input type="number" min="1" max="5" placeholder="research" id="research">
+  <input type="number" min="1" max="5" placeholder="infrastructure" id="infrastructure">
+  <input type="number" min="1" max="5" placeholder="sports" id="sports">
+  <input type="number" min="1" max="5" placeholder="food" id="food">
+  <input type="number" min="1" max="5" placeholder="environment" id="environment">
   <button class="btn" id="addSchool">Add</button>
 </div>
 
 <div id="results"></div>
 <canvas id="rankingChart"></canvas>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Criteria weights (out of 10)
 const weights = {
   Scholarship: 10,
   "Academic Quality": 9,
   "Employment Opportunities": 8,
-  "Innovation & Modern Programs": 8,
-  "International Environment": 2,
-  "Research Activity": 7,
-  "Infrastructure & IT Support": 8,
-  "Sports & Campus Life": 5,
-  "Food & Dining Facilities": 5,
-  "Campus Environment": 10
+  Innovation: 8,
+  International: 2,
+  Research: 7,
+  Infrastructure: 8,
+  Sports: 5,
+  Food: 5,
+  Environment: 10
 };
 
 let schools = [];
 let chart = null;
 
-// Parse CSV
-function parseCSV(text) {
+// Parse CSV from server
+async function loadCSV() {
+  const response = await fetch("data.csv");
+  const text = await response.text();
   const lines = text.trim().split("\n");
   const headers = lines[0].split(",");
-  const data = lines.slice(1).map(line => {
+  schools = lines.slice(1).map(line => {
     const values = line.split(",");
     const obj = {};
-    headers.forEach((h, i) => {
+    headers.forEach((h,i) => {
       const key = h.trim();
       const value = values[i]?.trim();
       obj[key] = isNaN(value) ? value : Number(value);
     });
     return obj;
   });
-  return data;
+  displayResults();
 }
 
 // Calculate weighted score
 function calculateScore(school) {
-  let total = 0;
-  let weightSum = 0;
+  let total = 0, weightSum = 0;
   for (let key in weights) {
     if (school[key] !== undefined && !isNaN(school[key])) {
       total += school[key] * weights[key];
       weightSum += weights[key];
     }
   }
-  return (total / weightSum) * 100; // Normalize to 0–100 scale
+  return (total / weightSum) * 100;
 }
 
-// Display table + chart
+// Display table & chart
 function displayResults() {
   schools.forEach(s => s.Score = calculateScore(s));
-  schools.sort((a, b) => b.Score - a.Score);
+  schools.sort((a,b) => b.Score - a.Score);
 
-  const results = document.getElementById("results");
+  // Table
   let html = `<h2>Ranking (${schools.length} Schools)</h2>
-  <table><tr><th>Rank</th><th>School</th><th>Score</th></tr>`;
-  schools.forEach((s, i) => {
-    const highlight = s.School === "Custom School" ? "style='background:#d1f5d3; font-weight:bold;'" : "";
-    html += `<tr ${highlight}><td>${i + 1}</td><td>${s.School}</td><td>${s.Score.toFixed(2)}</td></tr>`;
+    <table><tr><th>Rank</th><th>School</th><th>Score</th></tr>`;
+  schools.forEach((s,i) => {
+    const highlight = s.School === "Custom School" ? "style='background:#d1f5d3;font-weight:bold;'" : "";
+    html += `<tr ${highlight}><td>${i+1}</td><td>${s.School}</td><td>${s.Score.toFixed(2)}</td></tr>`;
   });
   html += "</table>";
-  results.innerHTML = html;
+  document.getElementById("results").innerHTML = html;
 
-  // Update chart
-  updateChart();
-}
-
-// Draw visual ranking
-function updateChart() {
+  // Chart
   const ctx = document.getElementById("rankingChart").getContext("2d");
   const labels = schools.map(s => s.School);
   const data = schools.map(s => s.Score);
-  const colors = schools.map(s =>
-    s.School === "Custom School" ? "#4CAF50" : "#2196F3"
-  );
+  const colors = schools.map(s => s.School === "Custom School" ? "#4CAF50" : "#2196F3");
 
-  if (chart) chart.destroy();
+  if(chart) chart.destroy();
   chart = new Chart(ctx, {
     type: "bar",
-    data: {
-      labels,
-      datasets: [{
-        label: "Score (Weighted)",
-        data,
-        backgroundColor: colors
-      }]
-    },
+    data: { labels, datasets: [{ label: "Weighted Score", data, backgroundColor: colors }] },
     options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        title: { display: true, text: "School Ranking Comparison" }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 100
-        },
-        x: {
-          ticks: {
-            callback: function(value, index) {
-              const name = labels[index];
-              return name.length > 10 ? name.slice(0, 10) + "…" : name;
-            }
-          }
-        }
-      }
+      responsive:true,
+      plugins:{ legend:{display:false}, title:{display:true,text:"School Ranking"} },
+      scales:{ y:{beginAtZero:true, max:100}, x:{ticks:{callback:(v,i)=>labels[i].length>10?labels[i].slice(0,10)+'…':labels[i]}}}
     }
   });
 }
 
-// Handle CSV upload
-document.getElementById("upload").addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    schools = parseCSV(reader.result);
-    displayResults();
-  };
-  reader.readAsText(file);
-});
-
-// Add custom school
+// Add 51st school
 document.getElementById("addSchool").addEventListener("click", () => {
   const newSchool = {
     School: document.getElementById("schoolName").value || "Custom School",
     Scholarship: +document.getElementById("scholarship").value,
     "Academic Quality": +document.getElementById("academic").value,
     "Employment Opportunities": +document.getElementById("employment").value,
-    "Innovation & Modern Programs": +document.getElementById("innovation").value,
-    "International Environment": +document.getElementById("international").value,
-    "Research Activity": +document.getElementById("research").value,
-    "Infrastructure & IT Support": +document.getElementById("infrastructure").value,
-    "Sports & Campus Life": +document.getElementById("sports").value,
-    "Food & Dining Facilities": +document.getElementById("food").value,
-    "Campus Environment": +document.getElementById("environment").value
+    Innovation: +document.getElementById("innovation").value,
+    International: +document.getElementById("international").value,
+    Research: +document.getElementById("research").value,
+    Infrastructure: +document.getElementById("infrastructure").value,
+    Sports: +document.getElementById("sports").value,
+    Food: +document.getElementById("food").value,
+    Environment: +document.getElementById("environment").value
   };
   schools.push(newSchool);
   displayResults();
 });
-</script>
 
-</body>
-</html>
+// Initialize
+loadCSV();
+</script>
