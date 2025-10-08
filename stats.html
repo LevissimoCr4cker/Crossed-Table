@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>School Ranking by Weighted Criteria</title>
+<title>🏫 Weighted School Ranking</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -22,8 +23,8 @@
     text-align: center;
   }
   th { background: #eee; }
-  #upload {
-    margin-bottom: 20px;
+  #upload, #addSchool {
+    margin-top: 10px;
   }
   .input-box {
     display: flex;
@@ -32,7 +33,8 @@
     margin-top: 10px;
   }
   .input-box input {
-    width: 60px;
+    width: 70px;
+    padding: 5px;
   }
   .btn {
     padding: 8px 16px;
@@ -43,14 +45,19 @@
     cursor: pointer;
   }
   .btn:hover { background-color: #005fa3; }
+  canvas {
+    margin-top: 40px;
+    width: 100% !important;
+    height: 400px !important;
+  }
 </style>
 </head>
 <body>
 
-<h1>🏫 Weighted School Ranking</h1>
+<h1>Weighted School Ranking</h1>
 
-<input type="file" id="upload" accept=".csv">
-<br>
+<h3>Upload your CSV (50 Schools)</h3>
+<input type="file" id="upload" accept=".csv" class="btn">
 
 <h3>Add Your Own School (51st)</h3>
 <div class="input-box" id="customInputs">
@@ -69,9 +76,10 @@
 </div>
 
 <div id="results"></div>
+<canvas id="rankingChart"></canvas>
 
 <script>
-// Criteria and weights (out of 10)
+// Criteria weights (out of 10)
 const weights = {
   Scholarship: 10,
   "Academic Quality": 9,
@@ -86,15 +94,20 @@ const weights = {
 };
 
 let schools = [];
+let chart = null;
 
-// Parse CSV manually
+// Parse CSV
 function parseCSV(text) {
   const lines = text.trim().split("\n");
   const headers = lines[0].split(",");
   const data = lines.slice(1).map(line => {
     const values = line.split(",");
     const obj = {};
-    headers.forEach((h, i) => obj[h.trim()] = isNaN(values[i]) ? values[i].trim() : Number(values[i]));
+    headers.forEach((h, i) => {
+      const key = h.trim();
+      const value = values[i]?.trim();
+      obj[key] = isNaN(value) ? value : Number(value);
+    });
     return obj;
   });
   return data;
@@ -113,22 +126,70 @@ function calculateScore(school) {
   return (total / weightSum) * 100; // Normalize to 0–100 scale
 }
 
-// Sort and display
+// Display table + chart
 function displayResults() {
   schools.forEach(s => s.Score = calculateScore(s));
   schools.sort((a, b) => b.Score - a.Score);
 
   const results = document.getElementById("results");
-  let html = `<h2>Results (Top ${schools.length} Schools)</h2><table><tr>
-  <th>Rank</th><th>School</th><th>Score</th></tr>`;
+  let html = `<h2>Ranking (${schools.length} Schools)</h2>
+  <table><tr><th>Rank</th><th>School</th><th>Score</th></tr>`;
   schools.forEach((s, i) => {
-    html += `<tr><td>${i + 1}</td><td>${s.School}</td><td>${s.Score.toFixed(2)}</td></tr>`;
+    const highlight = s.School === "Custom School" ? "style='background:#d1f5d3; font-weight:bold;'" : "";
+    html += `<tr ${highlight}><td>${i + 1}</td><td>${s.School}</td><td>${s.Score.toFixed(2)}</td></tr>`;
   });
   html += "</table>";
   results.innerHTML = html;
+
+  // Update chart
+  updateChart();
 }
 
-// File upload handler
+// Draw visual ranking
+function updateChart() {
+  const ctx = document.getElementById("rankingChart").getContext("2d");
+  const labels = schools.map(s => s.School);
+  const data = schools.map(s => s.Score);
+  const colors = schools.map(s =>
+    s.School === "Custom School" ? "#4CAF50" : "#2196F3"
+  );
+
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Score (Weighted)",
+        data,
+        backgroundColor: colors
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        title: { display: true, text: "School Ranking Comparison" }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100
+        },
+        x: {
+          ticks: {
+            callback: function(value, index) {
+              const name = labels[index];
+              return name.length > 10 ? name.slice(0, 10) + "…" : name;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Handle CSV upload
 document.getElementById("upload").addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
