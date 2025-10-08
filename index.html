@@ -11,12 +11,17 @@
   <div class="container" id="criteria-container"></div>
   <button id="findBtn" class="btn">Find Top Matches</button>
   <button id="statsBtn" class="btn secondary">View Classification Stats</button>
+   <button id="graphBtn" class="btn third">View Graphs</button>
   <div class="results" id="results"></div>
 
   <script>
 
      document.getElementById('statsBtn').addEventListener('click', () => {
     window.location.href = 'stats.html';
+  });
+
+    document.getElementById('graphBtn').addEventListener('click', () => {
+    window.location.href = 'graph.html';
   });
 
     
