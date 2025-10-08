@@ -10,6 +10,7 @@
   <header>Find the School that Matches Your Interests</header>
   <div class="container" id="criteria-container"></div>
   <button id="findBtn" class="btn">Find Top Matches</button>
+  <button id="statsBtn" class="btn secondary">View Classification Stats</button>
   <div class="results" id="results"></div>
 
   <script>
@@ -131,6 +132,11 @@
           resultsDiv.appendChild(card);
         });
       }
+
+      // Open classification stats page
+    document.getElementById('statsBtn').addEventListener('click', () => {
+      window.location.href = 'stats.html';
+    });
 
       // Retry button
       const retryBtn = document.createElement('button');
