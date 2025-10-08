@@ -1,1 +1,115 @@
-xx
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Criterion Distribution</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f6f6f8;
+    margin: 40px;
+    text-align: center;
+  }
+  select, button {
+    padding: 8px 12px;
+    margin: 10px;
+    font-size: 16px;
+  }
+  canvas {
+    margin-top: 30px;
+    width: 60% !important;
+    max-width: 600px;
+    height: 400px !important;
+  }
+</style>
+</head>
+<body>
+
+<h1>School Criterion Distribution</h1>
+
+<label for="criterion">Select Criterion:</label>
+<select id="criterion">
+  <option value="Scholarship">Scholarship</option>
+  <option value="Academic Quality">Academic Quality</option>
+  <option value="Employment Opportunities">Employment Opportunities</option>
+  <option value="Innovation">Innovation</option>
+  <option value="International">International</option>
+  <option value="Research">Research</option>
+  <option value="Infrastructure">Infrastructure</option>
+  <option value="Sports">Sports</option>
+  <option value="Food">Food</option>
+  <option value="Environment">Environment</option>
+</select>
+<button id="updateBtn">Update Chart</button>
+
+<canvas id="pieChart"></canvas>
+
+<script>
+let schools = [];
+let pieChart = null;
+
+// Load CSV
+async function loadCSV() {
+  const response = await fetch("data.csv");
+  const text = await response.text();
+  const lines = text.trim().split("\n");
+  const headers = lines[0].split(",");
+  schools = lines.slice(1).map(line => {
+    const values = line.split(",");
+    const obj = {};
+    headers.forEach((h,i) => {
+      const key = h.trim();
+      const value = values[i]?.trim();
+      obj[key] = isNaN(value) ? value : Number(value);
+    });
+    return obj;
+  });
+  updateChart();
+}
+
+// Count how many schools have 1,2,3,4,5 for a criterion
+function getCounts(criterion) {
+  const counts = [0,0,0,0,0]; // index 0 => score 1
+  schools.forEach(s => {
+    const val = s[criterion];
+    if(val >= 1 && val <=5) counts[val-1]++;
+  });
+  return counts;
+}
+
+// Draw pie chart
+function updateChart() {
+  const criterion = document.getElementById("criterion").value;
+  const counts = getCounts(criterion);
+  const ctx = document.getElementById("pieChart").getContext("2d");
+
+  if(pieChart) pieChart.destroy();
+  pieChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: ["1", "2", "3", "4", "5"],
+      datasets: [{
+        data: counts,
+        backgroundColor: ["#f44336","#ff9800","#ffeb3b","#4caf50","#2196f3"]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' },
+        title: { display: true, text: `Distribution of Schools for ${criterion}` }
+      }
+    }
+  });
+}
+
+// Button click updates chart
+document.getElementById("updateBtn").addEventListener("click", updateChart);
+
+loadCSV();
+</script>
+
+</body>
+</html>
