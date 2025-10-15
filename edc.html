@@ -1,1 +1,243 @@
-xx
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EDC Paris Business School Classification</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    .classification-line {
+      font-weight: bold;
+      margin-bottom: 20px;
+      font-size: 1.1em;
+      white-space: nowrap;
+      overflow-x: auto;
+    }
+    .charts-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      gap: 40px;
+    }
+    canvas {
+      max-width: 100%;
+      height: auto !important;
+    }
+    .chart-wrapper {
+      flex: 1 1 300px;
+      max-width: 600px;
+    }
+    .btn-return {
+      display: inline-block;
+      margin-top: 40px;
+      padding: 10px 20px;
+      background-color: #005baa;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .btn-return:hover {
+      background-color: #003f7d;
+    }
+    @media (max-width: 600px) {
+      .charts-container {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="classification-line">
+    4 Scholarship &nbsp;&nbsp; 5 Academic Quality &nbsp;&nbsp; 4 Employment Opportunities &nbsp;&nbsp; 5 Innovation &nbsp;&nbsp; 5 International &nbsp;&nbsp; 3 Research &nbsp;&nbsp; 4 Infrastructure &nbsp;&nbsp; 2 Sports &nbsp;&nbsp; 3 Food &nbsp;&nbsp; 4 Environment
+  </div>
+
+  <div class="charts-container">
+    <div class="chart-wrapper">
+      <h3>EDC vs Other Schools</h3>
+      <canvas id="comparisonChart"></canvas>
+    </div>
+    <div class="chart-wrapper">
+      <h3>EDC Radar Chart</h3>
+      <canvas id="radarChart"></canvas>
+    </div>
+  </div>
+
+  <a href="index.html" class="btn-return">Return to Home</a>
+
+  <script>
+    // EDC scores
+    const edcScores = {
+      Scholarship: 4,
+      "Academic Quality": 5,
+      "Employment Opportunities": 4,
+      Innovation: 5,
+      International: 5,
+      Research: 3,
+      Infrastructure: 4,
+      Sports: 2,
+      Food: 3,
+      Environment: 4
+    };
+
+    // Categories (labels)
+    const categories = Object.keys(edcScores);
+
+    // Load data.csv and create comparison chart
+    async function loadCSVAndCreateChart() {
+      try {
+        const response = await fetch('data.csv');
+        const csvText = await response.text();
+
+        // Parse CSV data - assuming first row = headers, first col = school names
+        const lines = csvText.trim().split('\n');
+        const headers = lines[0].split(',');
+        const dataLines = lines.slice(1);
+
+        // Check headers are same categories
+        // headers example: School, Scholarship, Academic Quality, Employment Opportunities, Innovation, International, Research, Infrastructure, Sports, Food, Environment
+        if(headers.length !== categories.length + 1) {
+          throw new Error('CSV headers do not match expected categories count');
+        }
+
+        // Prepare datasets for Chart.js
+        const schools = [];
+        const datasets = [];
+
+        // Colors for bars
+        const colors = [
+          'rgba(54, 162, 235, 0.7)',
+          'rgba(255, 99, 132, 0.7)',
+          'rgba(255, 206, 86, 0.7)',
+          'rgba(75, 192, 192, 0.7)',
+          'rgba(153, 102, 255, 0.7)',
+          'rgba(255, 159, 64, 0.7)',
+          'rgba(199, 199, 199, 0.7)',
+          'rgba(83, 102, 255, 0.7)',
+          'rgba(255, 99, 255, 0.7)',
+          'rgba(99, 255, 132, 0.7)'
+        ];
+
+        // Add EDC first so it stands out
+        schools.push('EDC Paris Business School');
+        datasets.push({
+          label: 'EDC Paris Business School',
+          data: categories.map(cat => edcScores[cat]),
+          backgroundColor: 'rgba(0, 123, 255, 0.8)'
+        });
+
+        // Parse other schools
+        dataLines.forEach((line, i) => {
+          const cols = line.split(',');
+          const schoolName = cols[0];
+          const scores = cols.slice(1).map(Number);
+          schools.push(schoolName);
+          datasets.push({
+            label: schoolName,
+            data: scores,
+            backgroundColor: colors[i % colors.length]
+          });
+        });
+
+        // Create comparison bar chart
+        const ctxComparison = document.getElementById('comparisonChart').getContext('2d');
+        const comparisonChart = new Chart(ctxComparison, {
+          type: 'bar',
+          data: {
+            labels: categories,
+            datasets: datasets
+          },
+          options: {
+            responsive: true,
+            interaction: {
+              mode: 'nearest',
+              axis: 'x',
+              intersect: false
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 5,
+                title: {
+                  display: true,
+                  text: 'Score (0-5)'
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  boxWidth: 12,
+                  padding: 10
+                }
+              },
+              tooltip: {
+                enabled: true
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Error loading or parsing CSV:', error);
+        document.getElementById('comparisonChart').parentNode.innerHTML = '<p style="color:red;">Failed to load comparison data.</p>';
+      }
+    }
+
+    // Create radar chart for EDC
+    function createRadarChart() {
+      const ctxRadar = document.getElementById('radarChart').getContext('2d');
+      new Chart(ctxRadar, {
+        type: 'radar',
+        data: {
+          labels: categories,
+          datasets: [{
+            label: 'EDC Paris Business School',
+            data: categories.map(cat => edcScores[cat]),
+            backgroundColor: 'rgba(0, 123, 255, 0.3)',
+            borderColor: 'rgba(0, 123, 255, 1)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(0, 123, 255, 1)'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            r: {
+              angleLines: { display: true },
+              suggestedMin: 0,
+              suggestedMax: 5,
+              ticks: {
+                stepSize: 1
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            },
+            tooltip: {
+              enabled: true
+            }
+          }
+        }
+      });
+    }
+
+    // Initialize charts
+    window.onload = () => {
+      createRadarChart();
+      loadCSVAndCreateChart();
+    };
+  </script>
+</body>
+</html>
