@@ -13,6 +13,7 @@
   <button id="statsBtn" class="btn secondary">View Classification Stats</button>
    <button id="graphBtn" class="btn third">View Graphs</button>
    <button id="apoBtn" class="btn four">View Statistiques</button>
+  <button id="edcBtn" class="btn five">EDC</button>
   <div class="results" id="results"></div>
 
   <script>
@@ -29,6 +30,9 @@
     window.location.href = 'graphics.html';
   });
 
+     document.getElementById('edcBtn').addEventListener('click', () => {
+    window.location.href = 'edc.html';
+  });
     
     // Criteria
     const criteria = [
