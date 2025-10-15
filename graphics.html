@@ -1,1 +1,154 @@
-xx
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>School Criterion Bar Charts</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f6f6f8;
+    margin: 40px;
+    text-align: center;
+  }
+  .chart-container {
+    width: 60%;
+    max-width: 600px;
+    margin: 40px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #ccc;
+  }
+  canvas {
+    width: 100% !important;
+    height: 300px !important;
+  }
+  h2 {
+    margin-bottom: 10px;
+  }
+</style>
+</head>
+<body>
+
+<h1>School Criterion Distribution (Bar Charts)</h1>
+
+<div id="charts"></div>
+
+<script>
+  let schools = [];
+  const criteria = [
+    "Scholarship",
+    "Academic Quality",
+    "Employment Opportunities",
+    "Innovation",
+    "International",
+    "Research",
+    "Infrastructure",
+    "Sports",
+    "Food",
+    "Environment"
+  ];
+
+  // Load CSV data
+  async function loadCSV() {
+    const response = await fetch("data.csv");
+    const text = await response.text();
+    const lines = text.trim().split("\n");
+    const headers = lines[0].split(",");
+    schools = lines.slice(1).map(line => {
+      const values = line.split(",");
+      const obj = {};
+      headers.forEach((h, i) => {
+        const key = h.trim();
+        const value = values[i]?.trim();
+        obj[key] = isNaN(value) ? value : Number(value);
+      });
+      return obj;
+    });
+  }
+
+  // Get counts of schools for scores 1-5 for a criterion
+  function getCounts(criterion) {
+    const counts = [0, 0, 0, 0, 0]; // indices 0-4 for scores 1-5
+    schools.forEach(school => {
+      const val = school[criterion];
+      if (val >= 1 && val <= 5) {
+        counts[val - 1]++;
+      }
+    });
+    return counts;
+  }
+
+  // Create bar chart for a given criterion inside container element
+  function createBarChart(container, criterion, counts) {
+    // Create title
+    const title = document.createElement("h2");
+    title.textContent = criterion;
+    container.appendChild(title);
+
+    // Create canvas
+    const canvas = document.createElement("canvas");
+    container.appendChild(canvas);
+
+    new Chart(canvas.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels: ["1 étoile", "2 étoiles", "3 étoiles", "4 étoiles", "5 étoiles"],
+        datasets: [{
+          label: `Number of Schools`,
+          data: counts,
+          backgroundColor: ["#f44336", "#ff9800", "#ffeb3b", "#4caf50", "#2196f3"]
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            },
+            title: {
+              display: true,
+              text: "Number of Schools"
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: "Score"
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: false
+          }
+        }
+      }
+    });
+  }
+
+  // Main function to load data and render all charts
+  async function init() {
+    await loadCSV();
+    const chartsDiv = document.getElementById("charts");
+
+    criteria.forEach(criterion => {
+      const counts = getCounts(criterion);
+      const container = document.createElement("div");
+      container.className = "chart-container";
+      chartsDiv.appendChild(container);
+      createBarChart(container, criterion, counts);
+    });
+  }
+
+  init();
+
+</script>
+
+</body>
+</html>
