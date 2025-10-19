@@ -3,314 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>School Analyzer</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Arial', sans-serif;
-    }
-
-    body {
-      background-color: #f0f4f8;
-      color: #333;
-    }
-
-    header {
-      background-color: #1e3a8a;
-      color: white;
-      text-align: center;
-      padding: 1.5rem;
-      font-size: 1.8rem;
-      font-weight: bold;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .container {
-      max-width: 800px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
-
-    .criterion {
-      display: flex;
-      align-items: center;
-      margin: 1rem 0;
-      background-color: white;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .criterion label {
-      flex: 1;
-      font-weight: 600;
-      color: #1e3a8a;
-    }
-
-    .stars {
-      display: flex;
-      gap: 0.3rem;
-    }
-
-    .star {
-      font-size: 1.5rem;
-      color: #d1d5db;
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-
-    .star.filled {
-      color: #3b82f6;
-    }
-
-    .star:hover {
-      color: #2563eb;
-    }
-
-    .btn-container {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin: 1.5rem 0;
-    }
-
-    .btn {
-      background-color: #3b82f6;
-      color: white;
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.2s;
-    }
-
-    .btn:hover {
-      background-color: #2563eb;
-    }
-
-    .btn.secondary {
-      background-color: #6b7280;
-    }
-
-    .btn.secondary:hover {
-      background-color: #4b5563;
-    }
-
-    .btn.third {
-      background-color: #4b5e8a;
-    }
-
-    .btn.third:hover {
-      background-color: #3b4a6b;
-    }
-
-    .btn.four {
-      background-color: #2c4a7e;
-    }
-
-    .btn.four:hover {
-      background-color: #1e3a8a;
-    }
-
-    .btn.five {
-      background-color: #1e40af;
-    }
-
-    .btn.five:hover {
-      background-color: #1e3a8a;
-    }
-
-    .btn.retry-btn {
-      background-color: #ef4444;
-    }
-
-    .btn.retry-btn:hover {
-      background-color: #dc2626;
-    }
-
-    .results {
-      max-width: 800px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
-
-    .card {
-      background-color: white;
-      padding: 1.5rem;
-      margin: 1rem 0;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .card h3 {
-      color: #1e3a8a;
-      margin-bottom: 1rem;
-    }
-
-    .card ul {
-      list-style: none;
-      margin: 0.5rem 0;
-    }
-
-    .card ul li {
-      margin: 0.5rem 0;
-      color: #374151;
-    }
-
-    .result-stars.mandatory {
-      color: #dc2626;
-      font-weight: bold;
-    }
-
-    .result-stars.four-star {
-      color: #f59e0b;
-    }
-
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      border: 0;
-    }
-
-    /* Burger Menu */
-    .burger-menu {
-      position: relative;
-      display: none;
-    }
-
-    .burger-icon {
-      background-color: #3b82f6;
-      color: white;
-      padding: 0.75rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .burger-icon:hover {
-      background-color: #2563eb;
-    }
-
-    .burger-menu-content {
-      display: none;
-      position: absolute;
-      top: 100%;
-      right: 0;
-      background-color: white;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      border-radius: 6px;
-      overflow: hidden;
-      z-index: 1000;
-    }
-
-    .burger-menu-content button {
-      display: block;
-      width: 100%;
-      text-align: left;
-      border: none;
-      background: none;
-      padding: 0.75rem 1.5rem;
-      color: #1e3a8a;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-
-    .burger-menu-content button:hover {
-      background-color: #f0f4f8;
-    }
-
-    .burger-menu.active .burger-menu-content {
-      display: block;
-    }
-
-    @media (max-width: 768px) {
-      .btn-container {
-        display: none;
-      }
-
-      .burger-menu {
-        display: block;
-        margin: 1rem auto;
-        text-align: center;
-      }
-    }
-  </style>
+  <title>Find the School that Matches Your Interests</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header>School Analyzer</header>
+  <header>Find the School that Matches Your Interests</header>
   <div class="container" id="criteria-container"></div>
-  <div class="btn-container">
-    <button id="findBtn" class="btn">Find Top Matches</button>
-    <button id="statsBtn" class="btn secondary">View Classification Stats</button>
-    <button id="graphBtn" class="btn third">View Graphs</button>
-    <button id="apoBtn" class="btn four">View Statistiques</button>
-    <button id="edcBtn" class="btn five">EDC</button>
-  </div>
-  <div class="burger-menu" id="burgerMenu">
-    <div class="burger-icon" id="burgerIcon">☰ Menu</div>
-    <div class="burger-menu-content" id="burgerMenuContent">
-      <button id="findBtnMobile" class="btn">Find Top Matches</button>
-      <button id="statsBtnMobile" class="btn secondary">View Classification Stats</button>
-      <button id="graphBtnMobile" class="btn third">View Graphs</button>
-      <button id="apoBtnMobile" class="btn four">View Statistiques</button>
-      <button id="edcBtnMobile" class="btn five">EDC</button>
-    </div>
-  </div>
+  <button id="findBtn" class="btn">Find Top Matches</button>
+  <button id="statsBtn" class="btn secondary">View Classification Stats</button>
+   <button id="graphBtn" class="btn third">View Graphs</button>
+   <button id="apoBtn" class="btn four">View Statistiques</button>
+  <button id="edcBtn" class="btn five">EDC</button>
   <div class="results" id="results"></div>
 
   <script>
-    // Toggle burger menu
-    const burgerIcon = document.getElementById('burgerIcon');
-    const burgerMenu = document.getElementById('burgerMenu');
-    burgerIcon.addEventListener('click', () => {
-      burgerMenu.classList.toggle('active');
-    });
 
-    // Button event listeners (desktop)
-    document.getElementById('statsBtn').addEventListener('click', () => {
-      window.location.href = 'stats.html';
-    });
+     document.getElementById('statsBtn').addEventListener('click', () => {
+    window.location.href = 'stats.html';
+  });
 
     document.getElementById('graphBtn').addEventListener('click', () => {
-      window.location.href = 'graph.html';
-    });
+    window.location.href = 'graph.html';
+  });
 
-    document.getElementById('apoBtn').addEventListener('click', () => {
-      window.location.href = 'graphics.html';
-    });
+     document.getElementById('apoBtn').addEventListener('click', () => {
+    window.location.href = 'graphics.html';
+  });
 
-    document.getElementById('edcBtn').addEventListener('click', () => {
-      window.location.href = 'edc.html';
-    });
-
-    // Button event listeners (mobile)
-    document.getElementById('statsBtnMobile').addEventListener('click', () => {
-      window.location.href = 'stats.html';
-    });
-
-    document.getElementById('graphBtnMobile').addEventListener('click', () => {
-      window.location.href = 'graph.html';
-    });
-
-    document.getElementById('apoBtnMobile').addEventListener('click', () => {
-      window.location.href = 'graphics.html';
-    });
-
-    document.getElementById('edcBtnMobile').addEventListener('click', () => {
-      window.location.href = 'edc.html';
-    });
-
+     document.getElementById('edcBtn').addEventListener('click', () => {
+    window.location.href = 'edc.html';
+  });
+    
     // Criteria
     const criteria = [
       "Scholarship Accessibility",
@@ -368,15 +91,6 @@
 
     // Find matches
     document.getElementById('findBtn').addEventListener('click', () => {
-      handleFindMatches();
-    });
-
-    document.getElementById('findBtnMobile').addEventListener('click', () => {
-      handleFindMatches();
-      burgerMenu.classList.remove('active');
-    });
-
-    function handleFindMatches() {
       const userPrefs = {};
       document.querySelectorAll('.stars').forEach(container => {
         const crit = container.dataset.criterion;
@@ -396,10 +110,12 @@
           return mandatoryCriteria.every(c => u[c] === 5);
         })
         .map(u => {
+          // Calculate scores for each priority level
           const fourStarScore = fourStarCriteria.reduce((sum, c) => sum + u[c], 0);
           const threeStarScore = threeStarCriteria.reduce((sum, c) => sum + u[c], 0);
           const twoStarScore = twoStarCriteria.reduce((sum, c) => sum + u[c], 0);
           const oneStarScore = oneStarCriteria.reduce((sum, c) => sum + u[c], 0);
+          // Calculate original match score for display
           let score = 0;
           criteria.forEach(c => {
             if (userPrefs[c] !== 5) {
@@ -409,11 +125,12 @@
           return { ...u, fourStarScore, threeStarScore, twoStarScore, oneStarScore, score };
         })
         .sort((a, b) => {
+          // Sort by 4-star score, then 3-star, 2-star, 1-star, then original score
           if (a.fourStarScore !== b.fourStarScore) return b.fourStarScore - a.fourStarScore;
           if (a.threeStarScore !== b.threeStarScore) return b.threeStarScore - a.threeStarScore;
           if (a.twoStarScore !== b.twoStarScore) return b.twoStarScore - a.twoStarScore;
           if (a.oneStarScore !== b.oneStarScore) return b.oneStarScore - a.oneStarScore;
-          return b.score - a.score;
+          return b.score - a.score; // Tiebreaker: original match score
         });
 
       const resultsDiv = document.getElementById('results');
@@ -436,6 +153,12 @@
         });
       }
 
+      // Open classification stats page
+    document.getElementById('statsBtn').addEventListener('click', () => {
+      window.location.href = 'stats.html';
+    });
+
+      // Retry button
       const retryBtn = document.createElement('button');
       retryBtn.textContent = "Retry";
       retryBtn.className = "btn retry-btn";
@@ -446,7 +169,9 @@
         resultsDiv.innerHTML = "";
       };
       resultsDiv.appendChild(retryBtn);
-    }
+    });
+
+  
   </script>
 </body>
 </html>
