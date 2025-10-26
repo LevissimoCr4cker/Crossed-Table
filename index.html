@@ -1,76 +1,343 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>School Analyzer</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SchoolMatch Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --card: rgba(255, 255, 255, 0.1);
+      --border: rgba(255, 255, 255, 0.15);
+      --text: #e2e8f0;
+      --accent: #3b82f6;
+      --accent-glow: #60a5fa;
+      --star-gold: #fbbf24;
+      --star-shadow: 0 0 20px #fbbf24, 0 0 40px #f59e0b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      font-weight: 700;
+      font-size: 2.2rem;
+      background: linear-gradient(90deg, #60a5fa, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+    }
+
+    .container {
+      display: flex;
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+    }
+
+    /* LEFT PANEL */
+    .criteria-panel {
+      flex: 1;
+      min-width: 360px;
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .criteria-panel h2 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: #60a5fa;
+      font-weight: 600;
+    }
+
+    .criterion {
+      margin-bottom: 20px;
+    }
+
+    .criterion label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+      color: #cbd5e1;
+    }
+
+    .stars {
+      display: flex;
+      gap: 8px;
+      perspective: 1000px;
+    }
+
+    .star {
+      font-size: 1.8rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      transform-style: preserve-3d;
+      position: relative;
+    }
+
+    .star::before {
+      content: 'Star';
+      color: #475569;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+    }
+
+    .star.filled::before {
+      color: var(--star-gold);
+      text-shadow: var(--star-shadow);
+      transform: translateZ(10px) scale(1.1);
+    }
+
+    .star:hover {
+      transform: rotateY(15deg) scale(1.15);
+    }
+
+    .star.filled:hover {
+      transform: rotateY(-15deg) scale(1.2);
+    }
+
+    /* BUTTON */
+    .find-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      cursor: pointer;
+      margin-top: 10px;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .find-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px rgba(59, 130, 246, 0.4);
+    }
+
+    .find-btn:active {
+      transform: translateY(0);
+    }
+
+    /* RIGHT PANEL */
+    .results-panel {
+      flex: 2;
+      min-width: 360px;
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .results-panel h2 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: #60a5fa;
+      font-weight: 600;
+    }
+
+    .result-card {
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid rgba(100, 116, 139, 0.3);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      border-radius: 16px 16px 0 0;
+    }
+
+    .result-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(59, 130, 246, 0.2);
+    }
+
+    .result-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.3rem;
+      color: #60a5fa;
+    }
+
+    .result-card p {
+      margin: 4px 0;
+      font-size: 0.95rem;
+      color: #cbd5e1;
+    }
+
+    .mini-bars {
+      margin-top: 12px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+    }
+
+    .bar-label {
+      width: 40px;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+
+    .bar {
+      flex: 1;
+      height: 6px;
+      background: rgba(100, 116, 139, 0.3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    /* HAMBURGER MENU */
+    .hamburger {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 1000;
+      cursor: pointer;
+      width: 50px;
+      height: 50px;
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+
+    .hamburger:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+    }
+
+    .hamburger span {
+      width: 22px;
+      height: 2px;
+      background: #60a5fa;
+      border-radius: 1px;
+      transition: all 0.3s ease;
+    }
+
+    .menu {
+      position: fixed;
+      top: 84px;
+      right: 24px;
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px 0;
+      min-width: 220px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+      display: none;
+      z-index: 999;
+    }
+
+    .menu.active { display: block; animation: fadeIn 0.3s ease; }
+
+    .menu a {
+      display: block;
+      padding: 12px 20px;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .menu a:hover {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      padding-left: 28px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      .container { flex-direction: column; }
+      .header { font-size: 1.8rem; }
+      .criteria-panel, .results-panel { min-width: 100%; }
+    }
+  </style>
 </head>
 <body>
-  <header>School Analyzer</header>
-  <div class="container" id="criteria-container"></div>
-  <div class="btn-container">
-    <button id="findBtn" class="btn">Find Top Matches</button>
-    <button id="statsBtn" class="btn secondary">View Classification Stats</button>
-    <button id="graphBtn" class="btn third">View Graphs</button>
-    <button id="apoBtn" class="btn four">View Statistiques</button>
-    <button id="edcBtn" class="btn five edcBtn">EDC</button>
+
+  <div class="header">SchoolMatch Pro</div>
+
+  <!-- HAMBURGER -->
+  <div class="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
   </div>
-  <div class="burger-menu" id="burgerMenu">
-    <div class="burger-icon" id="burgerIcon">☰ Menu</div>
-    <div class="burger-menu-content" id="burgerMenuContent">
-      <button id="findBtnMobile" class="btn">Find Top Matches</button>
-      <button id="statsBtnMobile" class="btn secondary">View Classification Stats</button>
-      <button id="graphBtnMobile" class="btn third">View Graphs</button>
-      <button id="apoBtnMobile" class="btn four">View Statistiques</button>
-      <button id="edcBtnMobile" class="btn five edcBtn">EDC</button>
+  <div class="menu" id="menu">
+    <a href="stats.html">Classification Stats</a>
+    <a href="graph.html">Graphs</a>
+    <a href="graphics.html">Statistiques</a>
+    <a href="edc.html">EDC</a>
+  </div>
+
+  <div class="container">
+    <!-- LEFT -->
+    <div class="criteria-panel">
+      <h2>Your Priorities</h2>
+      <div id="criteria-list"></div>
+      <button class="find-btn" onclick="findSchools()">Find Best Matches</button>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="results-panel">
+      <h2>Top Matches</h2>
+      <div id="results">
+        <p style="color:#94a3b8; font-style:italic;">Rate your priorities and click the button to find your perfect school.</p>
+      </div>
     </div>
   </div>
-  <div class="results" id="results"></div>
 
   <script>
-    // Toggle burger menu
-    const burgerIcon = document.getElementById('burgerIcon');
-    const burgerMenu = document.getElementById('burgerMenu');
-    burgerIcon.addEventListener('click', () => {
-      burgerMenu.classList.toggle('active');
-    });
-
-    // Button event listeners (desktop)
-    document.getElementById('statsBtn').addEventListener('click', () => {
-      window.location.href = 'stats.html';
-    });
-
-    document.getElementById('graphBtn').addEventListener('click', () => {
-      window.location.href = 'graph.html';
-    });
-
-    document.getElementById('apoBtn').addEventListener('click', () => {
-      window.location.href = 'graphics.html';
-    });
-
-    document.getElementById('edcBtn').addEventListener('click', () => {
-      window.location.href = 'edc.html';
-    });
-
-    // Button event listeners (mobile)
-    document.getElementById('statsBtnMobile').addEventListener('click', () => {
-      window.location.href = 'stats.html';
-    });
-
-    document.getElementById('graphBtnMobile').addEventListener('click', () => {
-      window.location.href = 'graph.html';
-    });
-
-    document.getElementById('apoBtnMobile').addEventListener('click', () => {
-      window.location.href = 'graphics.html';
-    });
-
-    document.getElementById('edcBtnMobile').addEventListener('click', () => {
-      window.location.href = 'edc.html';
-    });
-
-    // Existing JavaScript for criteria, fetching data, and finding matches
     const criteria = [
       "Scholarship Accessibility",
       "Academic Quality",
@@ -84,78 +351,103 @@
       "Campus Environment"
     ];
 
-    let universities = [];
+    let schools = [];
+
     fetch('data/schools.json')
-      .then(response => response.json())
-      .then(data => {
-        universities = data;
-        initializeCriteria();
-      })
-      .catch(error => {
-        console.error('Error fetching university data:', error);
-        document.getElementById('results').innerHTML = "<p>Error loading university data. Please try again later.</p>";
+      .then(r => r.json())
+      .then(data => { schools = data; initCriteria(); })
+      .catch(() => {
+        document.getElementById('results').innerHTML = '<p style="color:#f87171">Error: schools.json not found</p>';
       });
 
-    function initializeCriteria() {
-      const container = document.getElementById('criteria-container');
+    function initCriteria() {
+      const list = document.getElementById('criteria-list');
       criteria.forEach(c => {
         const div = document.createElement('div');
         div.className = 'criterion';
-        div.innerHTML = `<label for="${c.replace(/\s+/g, '-')}-stars">${c}:</label><div class="stars" data-criterion="${c}" id="${c.replace(/\s+/g, '-')}-stars">
-          <span class="star" data-value="1" role="button" aria-label="1 star for ${c}">&#9733;</span>
-          <span class="star" data-value="2" role="button" aria-label="2 stars for ${c}">&#9733;</span>
-          <span class="star" data-value="3" role="button" aria-label="3 stars for ${c}">&#9733;</span>
-          <span class="star" data-value="4" role="button" aria-label="4 stars for ${c}">&#9733;</span>
-          <span class="star" data-value="5" role="button" aria-label="5 stars for ${c}">&#9733;</span>
-        </div>`;
-        container.appendChild(div);
+        div.innerHTML = `
+          <label>${c}</label>
+          <div class="stars" data-name="${c}">
+            <span class="star" data-val="1">Star</span>
+            <span class="star" data-val="2">Star</span>
+            <span class="star" data-val="3">Star</span>
+            <span class="star" data-val="4">Star</span>
+            <span class="star" data-val="5">Star</span>
+          </div>`;
+        list.appendChild(div);
       });
 
-      document.querySelectorAll('.stars').forEach(starContainer => {
-        starContainer.addEventListener('click', e => {
+      document.querySelectorAll('.stars').forEach(stars => {
+        stars.addEventListener('click', e => {
           if (!e.target.classList.contains('star')) return;
-          const val = parseInt(e.target.dataset.value);
-          [...starContainer.children].forEach(star => {
-            star.classList.toggle('filled', parseInt(star.dataset.value) <= val);
-          });
+          const val = e.target.dataset.val;
+          [...stars.children].forEach(s => s.classList.toggle('filled', s.dataset.val <= val));
         });
+        // Default: 3 stars
+        for (let i = 0; i < 3; i++) stars.children[i].classList.add('filled');
       });
     }
 
-    document.getElementById('findBtn').addEventListener('click', () => {
-      handleFindMatches();
-    });
-
-    document.getElementById('findBtnMobile').addEventListener('click', () => {
-      handleFindMatches();
-      burgerMenu.classList.remove('active');
-    });
-
-    function handleFindMatches() {
-      const userPrefs = {};
-      document.querySelectorAll('.stars').forEach(container => {
-        const crit = container.dataset.criterion;
-        const filledStars = container.querySelectorAll('.star.filled').length;
-        userPrefs[crit] = filledStars;
+    function findSchools() {
+      const prefs = {};
+      document.querySelectorAll('.stars').forEach(s => {
+        const name = s.dataset.name;
+        const filled = s.querySelectorAll('.star.filled').length;
+        prefs[name] = filled || 3;
       });
 
-      const mandatoryCriteria = criteria.filter(c => userPrefs[c] === 5);
-      const fourStarCriteria = criteria.filter(c => userPrefs[c] === 4);
-      const threeStarCriteria = criteria.filter(c => userPrefs[c] === 3);
-      const twoStarCriteria = criteria.filter(c => userPrefs[c] === 2);
-      const oneStarCriteria = criteria.filter(c => userPrefs[c] === 1);
+      const mustHaves = Object.keys(prefs).filter(k => prefs[k] === 5);
 
-      const filtered = universities
-        .filter(u => {
-          if (mandatoryCriteria.length === 0) return true;
-          return mandatoryCriteria.every(c => u[c] === 5);
-        })
-        .map(u => {
-          const fourStarScore = fourStarCriteria.reduce((sum, c) => sum + u[c], 0);
-          const threeStarScore = threeStarCriteria.reduce((sum, c) => sum + u[c], 0);
-          const twoStarScore = twoStarCriteria.reduce((sum, c) => sum + u[c], 0);
-          const oneStarScore = oneStarCriteria.reduce((sum, c) => sum + u[c], 0);
+      const matches = schools
+        .filter(s => mustHaves.length === 0 || mustHaves.every(c => s[c] === 5))
+        .map(s => {
           let score = 0;
           criteria.forEach(c => {
-            if (userPrefs[c] !== 5) {
-              score += 5 -
+            const want = prefs[c];
+            const has = s[c] || 1;
+            const diff = Math.abs(want - has);
+            const weight = 6 - want;
+            score += diff * weight;
+          });
+          return { school: s, score };
+        })
+        .sort((a, b) => a.score - b.score)
+        .slice(0, 10);
+
+      showResults(matches);
+    }
+
+    function showResults(matches) {
+      const el = document.getElementById('results');
+      if (matches.length === 0) {
+        el.innerHTML = '<p style="color:#fb923c">No schools match your 5-star requirements. Try lowering some.</p>';
+        return;
+      }
+      el.innerHTML = `<h3 style="color:#60a5fa; margin-bottom:16px">${matches.length} Best Matches</h3>`;
+      matches.forEach(m => {
+        const s = m.school;
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        card.innerHTML = `
+          <h3>${s.Name}</h3>
+          <p><strong>Location:</strong> ${s.Location}</p>
+          <p><strong>Fit Score:</strong> <span style="color:#34d399">${m.score}</span> <small>(lower = better)</small></p>
+          <div class="mini-bars">
+            ${criteria.map(c => `
+              <div class="bar-row">
+                <span class="bar-label">${c[0]}</span>
+                <div class="bar"><div class="bar-fill" style="width:${(s[c]||0)*20}%"></div></div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        el.appendChild(card);
+      });
+    }
+
+    function toggleMenu() {
+      document.getElementById('menu').classList.toggle('active');
+    }
+  </script>
+</body>
+</html>
