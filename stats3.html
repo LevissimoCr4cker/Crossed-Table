@@ -1,0 +1,382 @@
+<styles>/* === YELLOW STARS === */
+.star {
+  font-size: 1.6rem;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: color 0.25s ease, transform 0.2s ease;
+}
+.star.hovered { color: #fbbf24 !important; transform: scale(1.15); }
+.star.selected { color: #f59e0b !important; transform: scale(1.1); }
+
+/* === POPUP === */
+.popup-overlay {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  display: flex; justify-content: center; align-items: center;
+  opacity: 0; visibility: hidden; transition: all 0.4s ease; z-index: 1000;
+}
+.popup-overlay.open { opacity: 1; visibility: visible; }
+.popup-content {
+  background: white; padding: 2rem; border-radius: 16px;
+  width: 90%; max-width: 500px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  transform: scale(0.8); transition: transform 0.4s ease;
+}
+.popup-overlay.open .popup-content { transform: scale(1); }
+.popup-content h3 { margin-bottom: 1rem; color: #1e40af; text-align: center; }
+#schoolName { width: 100%; padding: 0.8rem; margin: 1rem 0; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; }
+#star-container { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 1rem 0; }
+.star-row { display: flex; flex-direction: column; gap: 0.4rem; }
+.star-row label { font-size: 0.95rem; color: #475569; font-weight: 500; }
+.popup-buttons { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; }
+.btn.secondary { background: #e2e8f0; color: #1e293b; }
+
+/* === FLOATING BUTTONS === */
+.floating-classify {
+  position: fixed; bottom: 80px; right: 20px;
+  background: #f59e0b; color: white; width: 56px; height: 56px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
+  z-index: 999; border: none; cursor: pointer; transition: all 0.3s;
+}
+.floating-classify:hover { background: #d97706; transform: scale(1.1); }
+.floating-home {
+  position: fixed; bottom: 20px; right: 20px;
+  background: #3b82f6; color: white; width: 50px; height: 50px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000;
+  transition: all 0.3s;
+}
+.floating-home:hover { background: #2563eb; transform: scale(1.1); }
+
+/* === RANKING & CHART === */
+#ranking-section, #chart-section {
+  background: white; padding: 1.5rem; border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 1.5rem;
+}
+#ranking-table table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
+#ranking-table th, #ranking-table td { border: 1px solid #e2e8f0; padding: 0.6rem; text-align: center; }
+#ranking-table th { background: #3b82f6; color: white; }
+#ranking-table tr.highlight { background: #d1f5d3 !important; font-weight: bold; }
+#distributionChart { max-height: 400px; }
+
+/* Responsive */
+@media (min-width: 640px) { #star-container { grid-template-columns: 1fr 1fr; } }
+
+</styles>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weighted School Ranking</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2"></script>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <h1>Weighted School Ranking</h1>
+    <div class="hamburger" onclick="toggleMenu()">
+      <i class="fas fa-bars"></i>
+    </div>
+  </header>
+
+  <!-- MENU -->
+  <div id="menu-overlay" class="menu-overlay">
+    <div class="menu-content">
+      <h3>Menu</h3>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="#" onclick="openClassify()">Classify New</a></li>
+        <li><a href="#">About</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main>
+    <!-- RANKING -->
+    <section id="ranking-section">
+      <h2>Current Ranking</h2>
+      <div id="ranking-table"><p>Loading...</p></div>
+    </section>
+
+    <!-- CHART -->
+    <section id="chart-section" style="display: none;">
+      <h2>Score Distribution</h2>
+      <canvas id="distributionChart"></canvas>
+    </section>
+  </main>
+
+  <!-- FLOATING CLASSIFY -->
+  <button class="floating-classify" onclick="openClassify()">
+    <i class="fas fa-star"></i>
+  </button>
+
+  <!-- FLOATING HOME -->
+  <a href="index.html" class="floating-home">
+    <i class="fas fa-home"></i>
+  </a>
+
+  <!-- POPUP -->
+  <div id="classify-popup" class="popup-overlay">
+    <div class="popup-content">
+      <h3>Classify Your School</h3>
+      <input type="text" id="schoolName" placeholder="Your School Name">
+      <div id="star-container"></div>
+      <div class="popup-buttons">
+        <button onclick="addAndRank()" class="btn">Add & Rank</button>
+        <button onclick="closeClassify()" class="btn secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  
+</body>
+</html>
+<script>
+// === WEIGHTS (HIDDEN) ===
+const weights = {
+  "Scholarship Accessibility": 10,
+  "Academic Quality": 9,
+  "Employment Opportunities": 8,
+  "Innovation & Modern Programs": 8,
+  "International Environment": 2,
+  "Research Activity": 7,
+  "Infrastructure & IT Support": 8,
+  "Sports & Campus Life": 5,
+  "Food & Dining Facilities": 5,
+  "Campus Environment": 10
+};
+
+const criteria = Object.keys(weights);
+let schools = [];
+let customRatings = {};
+let chart = null;
+
+// === LOAD DATA ===
+async function loadData() {
+  try {
+    const res = await fetch("data/schools.json");
+    schools = await res.json();
+    displayRanking();
+  } catch (e) {
+    document.getElementById("ranking-table").innerHTML = "<p>Error loading data</p>";
+  }
+}
+
+// === RAW SCORE: star * importance (sum) ===
+function calculateRawScore(school) {
+  return criteria.reduce((sum, c) => sum + (school[c] || 0) * weights[c], 0);
+}
+
+// === NORMALIZED SCORE: raw / 50 (center of graph) ===
+function calculateNormalizedScore(school) {
+  return calculateRawScore(school) / 50;
+}
+
+// === Z-SCORE: (normalized - mean) / stdDev ===
+function calculateZScore(school, mean, stdDev) {
+  if (stdDev === 0) return 0;
+  return (calculateNormalizedScore(school) - mean) / stdDev;
+}
+
+// === DISPLAY RANKING (by raw score) ===
+function displayRanking(custom = null) {
+  schools.forEach(s => {
+    s.raw = calculateRawScore(s);
+    s.normalized = s.raw / 50;
+  });
+  schools.sort((a, b) => b.raw - a.raw);
+
+  const table = document.getElementById("ranking-table");
+  let html = `<table><tr><th>Rank</th><th>School</th><th>Score</th><th>Normalized</th></tr>`;
+  schools.forEach((s, i) => {
+    const isCustom = s === custom;
+    html += `<tr ${isCustom ? 'class="highlight"' : ''}>
+      <td>${i + 1}</td>
+      <td>${s.School} ${isCustom ? ' (You)' : ''}</td>
+      <td>${s.raw.toFixed(1)}</td>
+      <td>${s.normalized.toFixed(2)}</td>
+    </tr>`;
+  });
+  html += `</table>`;
+  if (custom) {
+    const rank = schools.indexOf(custom) + 1;
+    html += `<p><strong>Your rank: #${rank} / ${schools.length}</strong></p>`;
+  }
+  table.innerHTML = html;
+}
+
+// === SETUP STARS ===
+function setupPopupStars() {
+  const container = document.getElementById("star-container");
+  container.innerHTML = "";
+  criteria.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "star-row";
+    div.innerHTML = `
+      <label>${c}</label>
+      <div class="stars" data-key="${c}">
+        ${[1,2,3,4,5].map(i => `<i class="fas fa-star star" data-value="${i}"></i>`).join("")}
+      </div>
+    `;
+    container.appendChild(div);
+  });
+
+  document.querySelectorAll(".stars").forEach(cont => {
+    const key = cont.dataset.key;
+    const stars = cont.querySelectorAll(".star");
+    stars.forEach(star => {
+      star.onclick = () => {
+        customRatings[key] = +star.dataset.value;
+        fillStars(stars, customRatings[key], "selected");
+      };
+      star.onmouseenter = () => fillStars(stars, +star.dataset.value, "hovered");
+      star.onmouseleave = () => fillStars(stars, customRatings[key] || 0, "hovered");
+    });
+  });
+}
+
+function fillStars(stars, upTo, cls) {
+  stars.forEach(s => s.classList.toggle(cls, +s.dataset.value <= upTo));
+}
+
+// === POPUP ===
+function openClassify() {
+  customRatings = {};
+  document.getElementById("schoolName").value = "";
+  setupPopupStars();
+  document.getElementById("classify-popup").classList.add("open");
+}
+function closeClassify() {
+  document.getElementById("classify-popup").classList.remove("open");
+}
+
+// === ADD & RANK ===
+function addAndRank() {
+  const name = document.getElementById("schoolName").value.trim() || "My School";
+  if (Object.keys(customRatings).length < criteria.length) {
+    alert("Rate all criteria!");
+    return;
+  }
+
+  const customSchool = { School: name };
+  criteria.forEach(c => customSchool[c] = customRatings[c]);
+  schools.push(customSchool);
+
+  displayRanking(customSchool);
+  document.getElementById("chart-section").style.display = "block";
+  drawChart(customSchool);
+  closeClassify();
+}
+
+// === RELATIVE BELL CURVE (z-scores) ===
+function drawChart(yourSchool) {
+  // Recalculate all
+  schools.forEach(s => {
+    s.raw = calculateRawScore(s);
+    s.normalized = s.raw / 50;
+  });
+
+  const normalizedScores = schools.map(s => s.normalized);
+  const mean = normalizedScores.reduce((a,b) => a+b, 0) / normalizedScores.length;
+  const variance = normalizedScores.reduce((a,b) => a + (b-mean)**2, 0) / normalizedScores.length;
+  const stdDev = Math.sqrt(variance) || 0.1;
+
+  // X-axis: -3σ to +3σ
+  const minZ = -3, maxZ = 3;
+  const points = [];
+  for (let z = minZ; z <= maxZ; z += 0.05) {
+    const y = (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * z * z);
+    points.push({ x: z, y });
+  }
+
+  // Convert schools to z-scores
+  const schoolPoints = schools.map(s => {
+    const z = calculateZScore(s, mean, stdDev);
+    return { x: z, y: 0, name: s.School, raw: s.raw, isYou: s === yourSchool };
+  });
+
+  // Zones
+  const zones = [
+    { min: -3, max: -2, label: '0.1%' },
+    { min: -2, max: -1, label: '13.6%' },
+    { min: -1, max: 1,  label: '68.2%' },
+    { min: 1,  max: 2,  label: '13.6%' },
+    { min: 2,  max: 3,  label: '0.1%' }
+  ];
+
+  const ctx = document.getElementById("distributionChart").getContext("2d");
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      datasets: [
+        { label: 'Normal Distribution', data: points, borderColor: '#1e40af', fill: false, tension: 0.4, pointRadius: 0 },
+        { 
+          label: 'Schools', 
+          data: schoolPoints, 
+          type: 'scatter', 
+          pointBackgroundColor: ctx => ctx.raw.isYou ? '#f59e0b' : '#64748b',
+          pointRadius: 7,
+          pointHoverRadius: 11
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: { display: true, text: 'Relative Position (Z-Score)' },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              if (context.datasetIndex === 1) {
+                const s = context.raw;
+                return `${s.name}: ${s.raw.toFixed(1)} (z = ${context.parsed.x.toFixed(2)})`;
+              }
+              return '';
+            }
+          }
+        },
+        annotation: {
+          annotations: zones.map((z, i) => ({
+            type: 'box',
+            xMin: z.min, xMax: z.max,
+            backgroundColor: i === 2 ? 'rgba(59, 130, 246, 0.2)' : 
+                              i < 2 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(34, 197, 94, 0.3)',
+            borderWidth: 0,
+            label: { content: z.label, position: 'center', backgroundColor: 'rgba(0,0,0,0.7)', color: 'white' },
+            enter: ({ element }) => element.options.backgroundColor = element.options.backgroundColor.replace('0.2', '0.5').replace('0.3', '0.6'),
+            leave: ({ element }) => element.options.backgroundColor = element.options.backgroundColor.replace('0.5', '0.2').replace('0.6', '0.3')
+          }))
+        }
+      },
+      scales: {
+        x: { 
+          title: { display: true, text: 'Standard Deviations from Mean (σ)' },
+          min: minZ, max: maxZ,
+          ticks: { callback: v => v === 0 ? 'μ' : v + 'σ' }
+        },
+        y: { display: false }
+      },
+      interaction: { mode: 'nearest', intersect: false }
+    }
+  });
+}
+
+// === MENU ===
+function toggleMenu() {
+  document.getElementById("menu-overlay").classList.toggle("active");
+}
+
+// === INIT ===
+window.onload = () => {
+  loadData();
+};
+                                </script>
