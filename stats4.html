@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Weighted School Ranking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<style>
+/* === YOUR AESTHETIC === */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+html, body { height: 100%; overflow: hidden; }
+body { background: #f8fafc; color: #1e293b; line-height: 1.6; display: flex; flex-direction: column; }
+
+/* HEADER */
+header {
+  background: #1e40af; color: white; padding: 0.8rem 1.5rem;
+  display: flex; justify-content: space-between; align-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; flex-shrink: 0;
+}
+header h1 { font-size: 1.4rem; font-weight: 600; }
+.hamburger { font-size: 1.5rem; cursor: pointer; padding: 6px; border-radius: 6px; transition: background 0.2s; }
+.hamburger:hover { background: rgba(255,255,255,0.2); }
+
+/* MENU */
+.menu-overlay {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  display: flex; justify-content: center; align-items: center;
+  opacity: 0; visibility: hidden; transition: all 0.4s ease; z-index: 999;
+}
+.menu-overlay.active { opacity: 1; visibility: visible; }
+.menu-content {
+  background: rgba(59,130,246,0.95); padding: 2.5rem 1.5rem; border-radius: 16px;
+  width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  transform: scale(0.8); transition: transform 0.4s ease;
+}
+.menu-overlay.active .menu-content { transform: scale(1); }
+.menu-content h3 { color: white; margin-bottom: 1.5rem; font-size: 1.6rem; }
+.menu-content ul { list-style: none; }
+.menu-content li { margin: 0.8rem 0; }
+.menu-content a {
+  color: white; text-decoration: none; font-size: 1.1rem; font-weight: 500;
+  display: block; padding: 0.6rem 1.2rem; border-radius: 10px; transition: all 0.3s;
+}
+.menu-content a:hover { background: rgba(255,255,255,0.2); transform: translateX(6px); }
+
+/* MAIN */
+main { flex: 1; overflow-y: auto; padding: 1rem; max-width: 1000px; margin: 0 auto; width: 100%; }
+h2 { text-align: center; margin: 0.8rem 0; color: #1e40af; font-size: 1.4rem; font-weight: 600; }
+
+/* TABLE */
+#ranking-table table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.95rem; }
+#ranking-table th, #ranking-table td { border: 1px solid #e2e8f0; padding: 0.6rem; text-align: center; }
+#ranking-table th { background: #1e40af; color: white; }
+#ranking-table tr.highlight { background: #dbeafe !important; font-weight: bold; }
+
+/* YELLOW STARS */
+.stars { display: flex; gap: 4px; }
+.star {
+  font-size: 1.3rem; color: #e2e8f0; cursor: pointer;
+  transition: color 0.25s ease, transform 0.2s ease;
+}
+.star.hovered { color: #fbbf24 !important; transform: scale(1.15); }
+.star.selected { color: #f59e0b !important; transform: scale(1.1); }
+
+.star-row { display: flex; flex-direction: column; gap: 0.3rem; }
+.star-row label { font-weight: 500; color: #475569; font-size: 0.95rem; }
+#star-container { display: grid; gap: 1rem; margin-top: 1rem; }
+@media (min-width: 640px) { #star-container { grid-template-columns: 1fr 1fr; } }
+
+/* POPUP */
+.popup-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  display: flex; justify-content: center; align-items: center;
+  opacity: 0; visibility: hidden; transition: all 0.4s; z-index: 1000;
+}
+.popup-overlay.open { opacity: 1; visibility: visible; }
+.popup-content {
+  background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 500px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3); transform: scale(0.8); transition: transform 0.4s;
+}
+.popup-overlay.open .popup-content { transform: scale(1); }
+.popup-content h3 { margin-bottom: 1rem; color: #1e40af; text-align: center; }
+#schoolName { width: 100%; padding: 0.8rem; margin: 1rem 0; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; }
+.popup-buttons { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; }
+.btn {
+  flex: 1; padding: 0.75rem; font-weight: 600; border: none; border-radius: 10px;
+  cursor: pointer; transition: all 0.3s; box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+.btn.primary { background: #3b82f6; color: white; }
+.btn.primary:hover { background: #2563eb; transform: translateY(-2px); }
+.btn.secondary { background: #e2e8f0; color: #1e293b; }
+.btn.secondary:hover { background: #cbd5e1; }
+
+/* YELLOW STAR BUTTON */
+.floating-star {
+  position: fixed; bottom: 80px; right: 20px;
+  background: #f59e0b; color: white; width: 56px; height: 56px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; box-shadow: 0 6px 16px rgba(245,158,11,0.3);
+  border: none; cursor: pointer; transition: all 0.3s; z-index: 999;
+}
+.floating-star:hover { background: #d97706; transform: scale(1.1); }
+
+/* CHART */
+#chart-section { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-top: 1rem; }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Ranking</h1>
+  <div class="hamburger" onclick="toggleMenu()">Menu</div>
+</header>
+
+<div id="menu-overlay" class="menu-overlay">
+  <div class="menu-content">
+    <h3>Menu</h3>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="#" onclick="openAddPopup();toggleMenu();return false;">Add New</a></li>
+      <li><a href="#">About</a></li>
+    </ul>
+  </div>
+</div>
+
+<main>
+  <h2>Current Ranking (0 – 100)</h2>
+  <div id="ranking-table"><p>Loading…</p></div>
+
+  <div id="chart-section" style="display:none;">
+    <h2>Score Distribution</h2>
+    <canvas id="distributionChart"></canvas>
+  </div>
+</main>
+
+<button class="floating-star" onclick="openAddPopup()">
+  <i class="fas fa-star"></i>
+</button>
+
+<div id="add-popup" class="popup-overlay">
+  <div class="popup-content">
+    <h3>Add Your School</h3>
+    <input type="text" id="schoolName" placeholder="School name">
+    <div id="star-container"></div>
+    <div class="popup-buttons">
+      <button class="btn primary" onclick="addAndRank()">Add & Rank</button>
+      <button class="btn secondary" onclick="closeAddPopup()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let schools = [];           // from JSON
+let userSchools = [];       // only user-added
+let weights = {};
+let customRatings = {};
+let chart = null;
+const MAX_SCORE = 100;
+
+// 10 CRITERIA
+const CRITERIA = [
+  "Scholarship Accessibility", "Academic Quality", "Employment Opportunities",
+  "Innovation & Modern Programs", "International Environment", "Research Activity",
+  "Infrastructure & IT Support", "Sports & Campus Life", "Food & Dining Facilities",
+  "Campus Environment"
+];
+
+// === HARDCODED 52 SCHOOLS (YOUR LIST) ===
+const HARDCODED_SCORES = [
+  { name: "Stanford University", score: 92.0 },
+  { name: "Harvard University", score: 88.0 },
+  { name: "International Innovation University", score: 88.0 },
+  { name: "ETH Zurich", score: 86.0 },
+  { name: "International Science Academy", score: 86.0 },
+  { name: "Elite International College", score: 84.0 },
+  { name: "Western Science University", score: 84.0 },
+  { name: "MIT", score: 82.0 },
+  { name: "University of Oxford", score: 82.0 },
+  { name: "University of Cambridge", score: 82.0 },
+  { name: "Urban Science University", score: 80.0 },
+  { name: "Eastern Research University", score: 80.0 },
+  { name: "Innovation State University", score: 80.0 },
+  { name: "Global Tech Institute", score: 78.0 },
+  { name: "Northern Leadership Institute", score: 78.0 },
+  { name: "Pacific Leadership University", score: 78.0 },
+  { name: "University of Tokyo", score: 76.0 },
+  { name: "Pacific Research University", score: 76.0 },
+  { name: "International Leadership College", score: 76.0 },
+  { name: "National Technical University", score: 76.0 },
+  { name: "Metropolitan Technology Institute", score: 76.0 },
+  { name: "Southern Technical University", score: 76.0 },
+  { name: "Global Tech College", score: 76.0 },
+  { name: "Continental University", score: 74.0 },
+  { name: "TechPioneers Academy", score: 74.0 },
+  { name: "Central University", score: 74.0 },
+  { name: "Northern Technical Institute", score: 74.0 },
+  { name: "Urban Innovation Hub", score: 74.0 },
+  { name: "Regional Science Institute", score: 74.0 },
+  { name: "USP (University of São Paulo)", score: 72.0 },
+  { name: "Southern Innovation Hub", score: 72.0 },
+  { name: "Global Business School", score: 72.0 },
+  { name: "Global Commerce University", score: 72.0 },
+  { name: "Sorbonne University", score: 68.0 },
+  { name: "Metropolitan State University", score: 66.0 },
+  { name: "Capital City University", score: 66.0 },
+  { name: "State Polytechnic", score: 62.0 },
+  { name: "Southern Commerce College", score: 62.0 },
+  { name: "National Business Academy", score: 62.0 },
+  { name: "Western Finance College", score: 60.0 },
+  { name: "Regional Arts Institute", score: 60.0 },
+  { name: "Western Arts College", score: 60.0 },
+  { name: "Continental Arts College", score: 60.0 },
+  { name: "Eastern Finance Academy", score: 60.0 },
+  { name: "Capital Arts Institute", score: 60.0 },
+  { name: "Metropolitan Arts College", score: 60.0 },
+  { name: "Northern Business School", score: 58.0 },
+  { name: "Eastern Arts Academy", score: 58.0 },
+  { name: "Local Polytechnic", score: 52.0 }
+];
+
+async function loadData() {
+  try {
+    const res = await fetch('data/schools.json');
+    if (res.ok) {
+      const data = await res.json();
+      schools = data.map(s => ({ ...s, fromJson: true }));
+    } else {
+      schools = HARDCODED_SCORES.map(s => {
+        const obj = { School: s.name };
+        CRITERIA.forEach(c => obj[c] = 3); // dummy
+        return obj;
+      });
+    }
+  } catch (e) {
+    schools = HARDCODED_SCORES.map(s => {
+      const obj = { School: s.name };
+      CRITERIA.forEach(c => obj[c] = 3);
+      return obj;
+    });
+  }
+
+  // Default weights
+  CRITERIA.forEach(c => weights[c] = 5);
+
+  // Try CSV
+  try {
+    const cRes = await fetch('data/class.csv');
+    if (cRes.ok) {
+      const txt = await cRes.text();
+      Papa.parse(txt, {
+        header: true,
+        complete: r => {
+          r.data.forEach(row => {
+            const c = row.Criterion?.trim();
+            const i = parseFloat(row.Importance);
+            if (c && !isNaN(i)) weights[c] = i;
+          });
+        }
+      });
+    }
+  } catch(e) {}
+
+  loadFromLocal();
+  displayRanking();
+  document.getElementById('chart-section').style.display = 'block';
+  drawChart(); // SHOW CHART FROM START
+}
+
+function rawScore(s) {
+  return CRITERIA.reduce((sum, C) => sum + (s[C] || 0) * (weights[C] || 5), 0);
+}
+function maxPossible() {
+  return CRITERIA.reduce((s, C) => s + 5 * (weights[C] || 5), 0);
+}
+function normalizedScore(s) {
+  const score = s.score || (HARDCODED_SCORES.find(h => h.name === s.School)?.score) || 0;
+  return score > 0 ? score : (rawScore(s) / maxPossible()) * MAX_SCORE;
+}
+
+function displayRanking(custom = null) {
+  const all = [...schools, ...userSchools];
+  all.forEach(s => s.score = normalizedScore(s));
+  all.sort((a, b) => b.score - a.score);
+
+  const tbl = document.getElementById('ranking-table');
+  let html = `<table><tr><th>Rank</th><th>School</th><th>Score</th></tr>`;
+  all.forEach((s, i) => {
+    const you = s === custom ? ' (You)' : '';
+    html += `<tr ${s===custom?'class="highlight"':''}>
+      <td>${i + 1}</td>
+      <td>${s.School}${you}</td>
+      <td>${s.score.toFixed(1)}</td>
+    </tr>`;
+  });
+  html += `</table>`;
+  if (custom) {
+    const rank = all.indexOf(custom) + 1;
+    html += `<p><strong>Your rank: #${rank} / ${all.length}</strong></p>`;
+  }
+  tbl.innerHTML = html;
+}
+
+function buildStars() {
+  const container = document.getElementById('star-container');
+  container.innerHTML = '';
+  CRITERIA.forEach(C => {
+    const div = document.createElement('div');
+    div.className = 'star-row';
+    div.innerHTML = `
+      <label>${C}</label>
+      <div class="stars" data-key="${C}">
+        ${[1,2,3,4,5].map(i => `<i class="fas fa-star star" data-value="${i}"></i>`).join('')}
+      </div>`;
+    container.appendChild(div);
+  });
+
+  document.querySelectorAll('.stars').forEach(cont => {
+    const key = cont.dataset.key;
+    const stars = cont.querySelectorAll('.star');
+    stars.forEach(star => {
+      star.onclick = () => {
+        customRatings[key] = +star.dataset.value;
+        fillStars(stars, customRatings[key], 'selected');
+      };
+      star.onmouseenter = () => fillStars(stars, +star.dataset.value, 'hovered');
+      star.onmouseleave = () => fillStars(stars, customRatings[key] ?? 0, 'hovered');
+    });
+  });
+}
+function fillStars(stars, upTo, cls) {
+  stars.forEach(s => s.classList.toggle(cls, +s.dataset.value <= upTo));
+}
+
+function openAddPopup() {
+  customRatings = {};
+  document.getElementById('schoolName').value = '';
+  buildStars();
+  document.getElementById('add-popup').classList.add('open');
+}
+function closeAddPopup() {
+  document.getElementById('add-popup').classList.remove('open');
+}
+
+function addAndRank() {
+  const name = document.getElementById('schoolName').value.trim() || 'My School';
+  if (Object.keys(customRatings).length < CRITERIA.length) {
+    alert('Rate all 10 criteria!');
+    return;
+  }
+  const newSchool = { School: name };
+  CRITERIA.forEach(C => newSchool[C] = customRatings[C]);
+  userSchools = userSchools.filter(s => s.School !== name);
+  userSchools.push(newSchool);
+  saveToLocal();
+  displayRanking(newSchool);
+  drawChart(newSchool.score);
+  closeAddPopup();
+}
+
+function saveToLocal() {
+  localStorage.setItem('userSchools', JSON.stringify(userSchools));
+}
+function loadFromLocal() {
+  const stored = localStorage.getItem('userSchools');
+  if (stored) {
+    try { userSchools = JSON.parse(stored); } catch(e) { userSchools = []; }
+  }
+}
+
+function drawChart() {
+  const curve = [];
+  for (let x = -3; x <= 3; x += 0.05) {
+    const y = Math.exp(-0.5 * x * x);
+    curve.push({ x, y });
+  }
+
+  const ctx = document.getElementById('distributionChart').getContext('2d');
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      datasets: [{
+        label: 'Bell Curve',
+        data: curve,
+        borderColor: '#1e40af',
+        backgroundColor: 'rgba(59,130,246,0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0,
+        borderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: { display: true, text: 'Your Position in the World', font: { size: 18, weight: '600' }, color: '#1e40af' },
+        tooltip: { enabled: false },
+        annotation: {
+          annotations: [
+            {
+              type: 'box',
+              xMin: -3, xMax: -2,
+              backgroundColor: 'rgba(239,68,68,0.3)',
+              borderWidth: 0,
+              label: { content: 'Bottom 2.3%', color: '#fff', backgroundColor: 'rgba(0,0,0,0.7)', font: { size: 11 } },
+              enter: ctx => ctx.element.options.backgroundColor = 'rgba(239,68,68,0.6)',
+              leave: ctx => ctx.element.options.backgroundColor = 'rgba(239,68,68,0.3)'
+            },
+            {
+              type: 'box',
+              xMin: -2, xMax: -1,
+              backgroundColor: 'rgba(239,68,68,0.2)',
+              borderWidth: 0,
+              label: { content: '13.6%', color: '#fff', backgroundColor: 'rgba(0,0,0,0.7)', font: { size: 11 } },
+              enter: ctx => ctx.element.options.backgroundColor = 'rgba(239,68,68,0.5)',
+              leave: ctx => ctx.element.options.backgroundColor = 'rgba(239,68,68,0.2)'
+            },
+            {
+              type: 'box',
+              xMin: -1, xMax: 1,
+              backgroundColor: 'rgba(59,130,246,0.15)',
+              borderWidth: 0,
+              label: { content: '68% – Most Schools', color: '#fff', backgroundColor: 'rgba(0,0,0,0.7)', font: { size: 12, weight: 'bold' } },
+              enter: ctx => ctx.element.options.backgroundColor = 'rgba(59,130,246,0.4)',
+              leave: ctx => ctx.element.options.backgroundColor = 'rgba(59,130,246,0.15)'
+            },
+            {
+              type: 'box',
+              xMin: 1, xMax: 2,
+              backgroundColor: 'rgba(34,197,94,0.2)',
+              borderWidth: 0,
+              label: { content: 'Top 13.6%', color: '#fff', backgroundColor: 'rgba(0,0,0,0.7)', font: { size: 11 } },
+              enter: ctx => ctx.element.options.backgroundColor = 'rgba(34,197,94,0.5)',
+              leave: ctx => ctx.element.options.backgroundColor = 'rgba(34,197,94,0.2)'
+            },
+            {
+              type: 'box',
+              xMin: 2, xMax: 3,
+              backgroundColor: 'rgba(34,197,94,0.3)',
+              borderWidth: 0,
+              label: { content: 'Top 2.3%', color: '#fff', backgroundColor: 'rgba(0,0,0,0.7)', font: { size: 11 } },
+              enter: ctx => ctx.element.options.backgroundColor = 'rgba(34,197,94,0.6)',
+              leave: ctx => ctx.element.options.backgroundColor = 'rgba(34,197,94,0.3)'
+            },
+            {
+              type: 'line',
+              xMin: 0, xMax: 0,
+              borderColor: '#1e40af',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              label: { content: 'Mean', enabled: true, position: 'top', backgroundColor: 'transparent', color: '#1e40af', font: { weight: 'bold' } }
+            }
+          ]
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Standard Deviations from Mean', color: '#475569' },
+          min: -3, max: 3,
+          ticks: {
+            callback: v => {
+              if (v === 0) return 'Mean';
+              if (v === 1 || v === -1) return '±1σ';
+              if (v === 2 || v === -2) return '±2σ';
+              return '';
+            },
+            color: '#64748b'
+          },
+          grid: { display: false }
+        },
+        y: { display: false }
+      },
+      interaction: { mode: 'nearest', intersect: true }
+    }
+  });
+}
+
+function toggleMenu() {
+  document.getElementById('menu-overlay').classList.toggle('active');
+}
+
+window.onload = loadData;
+</script>
+</body>
+</html>

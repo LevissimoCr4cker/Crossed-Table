@@ -1,58 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>School Finder</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<meta charset="UTF-8">
+<title>RankFlow • AI-Powered University Matching</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* === COSMIC AESTHETIC === */
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { height:100%; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:#e2e8f0; font-family:'Segoe UI',sans-serif; overflow-x:hidden; }
+header { padding:1.5rem 2rem; display:flex; justify-content:space-between; align-items:center; backdrop-filter:blur(10px); border-bottom:1px solid rgba(255,255,255,0.1); }
+.logo { font-size:1.8rem; font-weight:800; background:linear-gradient(to right, #60a5fa, #34d399); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+nav a { color:#94a3b8; margin:0 1rem; text-decoration:none; font-weight:500; transition:0.3s; }
+nav a:hover { color:#60a5fa; }
+
+main { padding:3rem 2rem; max-width:1200px; margin:0 auto; }
+.hero { text-align:center; padding:4rem 0; }
+.hero h1 { font-size:3.5rem; margin-bottom:1rem; background:linear-gradient(to right, #60a5fa, #34d399); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.hero p { font-size:1.3rem; color:#94a3b8; max-width:800px; margin:0 auto 2rem; }
+
+.features { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:2rem; margin-top:4rem; }
+.card {
+  background:rgba(30,41,59,0.7); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.1);
+  border-radius:20px; padding:2rem; transition:0.4s; cursor:pointer; position:relative; overflow:hidden;
+}
+.card:hover { transform:translateY(-12px); box-shadow:0 20px 40px rgba(0,0,0,0.3); }
+.card::before { content:''; position:absolute; top:0; left:0; width:100%; height:4px; background:linear-gradient(to right, #60a5fa, #34d399); }
+.card h3 { font-size:1.6rem; margin-bottom:1rem; color:#60a5fa; }
+.card p { color:#cbd5e1; line-height:1.7; }
+.card .icon { font-size:3rem; margin-bottom:1rem; background:linear-gradient(to bottom, #60a5fa, #34d399); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+footer { text-align:center; padding:2rem; color:#64748b; font-size:0.9rem; }
+</style>
 </head>
 <body>
-  <!-- HEADER -->
-  <header>
-    <h1>School Finder</h1>
-    <div class="hamburger" onclick="toggleMenu()">
-      <i class="fas fa-bars"></i>
-    </div>
-  </header>
 
-  <!-- FULL-SCREEN MENU OVERLAY -->
-  <div id="menu-overlay" class="menu-overlay">
-    <div class="menu-content">
-      <h3>Menu</h3>
-      <ul>
-        <li><a href="#" onclick="closeMenu()">How It Works</a></li>
-        <li><a href="graph.html" onclick="closeMenu()">Statistiques</a></li>
-        <li><a href="stats3.html" onclick="closeMenu()">Ranking</a></li>
-        <li><a href="edc.html" onclick="closeMenu()">EDC Analises</a></li>
-      </ul>
-    </div>
+<header>
+  <div class="logo">RankFlow</div>
+  <nav>
+    <a href="find.html">School finder</a>
+    <a href="stats4.html">Ranking</a>
+    <a href="graph3.html">Statistiques</a>
+    <a href="edc.html">EDC Classification</a>
+  </nav>
+</header>
+
+<main>
+  <div class="hero">
+    <h1>Discover Your Perfect University</h1>
+    <p>Using <strong>multidimensional vector similarity</strong>, <strong>Bayesian preference modeling</strong>, and <strong>Gaussian distribution visualization</strong> — find the school that matches you.</p>
   </div>
 
-  <!-- MAIN CONTENT -->
-  <main>
-    <!-- CRITERIA SECTION -->
-    <section id="criteria">
-      <h2> What Matters to You ? </h2>
-      <div id="criteria-list"></div>
-      <div class="buttons">
-        <button id="find-btn" onclick="findSchools()">Find</button>
-      </div>
-    </section>
+  <div class="features">
 
-    <!-- RESULTS SECTION -->
-    <section id="results" style="display: none;">
-      <div class="results-header">
-        <h2>Top Matching Schools</h2>
-        <div class="result-buttons">
-          <button onclick="goBack()">Back</button>
-          <button onclick="resetAll()">Reset</button>
-        </div>
-      </div>
-      <div id="school-list"></div>
-    </section>
-  </main>
+    <!-- FIND YOUR SCHOOL -->
+    <div class="card" onclick="location.href='find.html'">
+      <div class="icon"><i class="fas fa-search"></i></div>
+      <h3>Find Your School</h3>
+      <p>
+        Define your ideal university using <strong>5-star weighted criteria</strong>.  
+        Our <strong> similarity engine</strong> scans a database of <strong>50 elite institutions</strong> and returns the <strong>top matches</strong> with <strong>95% confidence intervals</strong>.
+      </p>
+    </div>
 
-  <script src="script.js"></script>
+    <!-- STATISTIQUES -->
+    <div class="card" onclick="location.href='stats.html'">
+      <div class="icon"><i class="fas fa-chart-pie"></i></div>
+      <h3>Statistiques</h3>
+      <p>
+        Explore <strong>multivariate distributions</strong> across 10 dimensions.  
+         <strong>Pie charts</strong> and <strong> bar graphs</strong> reveal the <strong>global mean</strong>, <strong>variance</strong>, <strong></strong> of each criterion.
+      </p>
+    </div>
+
+    <!-- RANKING -->
+    <div class="card" onclick="location.href='rank.html'">
+      <div class="icon"><i class="fas fa-trophy"></i></div>
+      <h3>Ranking</h3>
+      <p>
+        A <strong>weighted composite index</strong> ranks all schools using <strong>user-defined importance vectors</strong>.  
+        Add your custom school and watch it appear on the <strong>real-time Gaussian bell curve</strong> with <strong>Z-score positioning</strong>.
+      </p>
+    </div>
+
+    <!-- EDC CLASS -->
+    <div class="card" onclick="location.href='detail.html'">
+      <div class="icon"><i class="fas fa-microscope"></i></div>
+      <h3>EDC Classification</h3>
+      <p>
+        Deep look into one element with <strong>spider radar charts</strong>, <strong>percentile rankings</strong>, and <strong>comparative differential analysis</strong> against the <strong>global mean</strong>.
+      </p>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  &copy; 2025 RankFlow • Powered by <strong>Bayesian Inference</strong> & <strong>Neural Preference Mapping</strong>
+</footer>
+
 </body>
 </html>
