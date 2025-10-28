@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EDC Paris Business School Classification</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', Arial, sans-serif; }
+
+    body {
+      background: rgba(255, 255, 255, 0.95);
+      color: #333;
+      padding: 20px;
+      position: relative;
+      min-height: 100vh;
+      overflow-x: hidden;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* === HEADER === */
+    header {
+      position: relative;
+      text-align: center;
+      padding: 20px;
+      background: rgba(30, 58, 138, 0.9);
+      color: #fff;
+      font-size: 1.8rem;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      margin-bottom: 20px;
+      border-radius: 8px;
+      backdrop-filter: blur(5px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hamburger {
+      position: absolute;
+      right: 20px;
+      font-size: 1.6rem;
+      cursor: pointer;
+      color: #fff;
+      padding: 8px;
+      border-radius: 6px;
+      transition: background 0.3s;
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.2); }
+
+    /* === MENU OVERLAY === */
+    .menu-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.4s ease;
+      z-index: 999;
+    }
+    .menu-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .menu-content {
+      background: rgba(59, 130, 246, 0.95);
+      padding: 2.5rem 1.5rem;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      transform: scale(0.8);
+      transition: transform 0.4s ease;
+    }
+    .menu-overlay.active .menu-content {
+      transform: scale(1);
+    }
+    .menu-content ul { list-style: none; margin-top: 1rem; }
+    .menu-content li { margin: 0.8rem 0; }
+    .menu-content a {
+      color: white;
+      text-decoration: none;
+      font-size: 1.1rem;
+      font-weight: 500;
+      display: block;
+      padding: 0.6rem 1.2rem;
+      border-radius: 10px;
+      transition: all 0.3s;
+    }
+    .menu-content a:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(6px);
+    }
+
+    /* === CLASSIFICATION LINE === */
+    .classification-line {
+      font-weight: bold;
+      margin-bottom: 20px;
+      font-size: 1.1em;
+      white-space: nowrap;
+      overflow-x: auto;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    /* === CHARTS === */
+    .charts-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      gap: 40px;
+    }
+    .chart-wrapper {
+      flex: 1 1 300px;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      backdrop-filter: blur(5px);
+    }
+    canvas { max-width: 100%; height: auto !important; }
+
+    /* === BUTTONS === */
+    .btn-return {
+      display: inline-block;
+      margin-top: 40px;
+      padding: 10px 20px;
+      background-color: rgba(59,130,246,0.7);
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    .btn-return:hover {
+      background-color: rgba(37,99,235,0.8);
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      .charts-container { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER WITH HAMBURGER -->
+  <header>
+  <h1 class="header-title">EDC Paris Business School</h1>
+  <div class="hamburger" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+</header>
+
+<style>
+  /* Header title smaller and left-aligned */
+  .header-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    position: absolute;
+    left: 20px;
+  }
+
+
+
+  #chart-icon {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    font-size: 2.5rem; /* size of the emoji */
+    z-index: 1000;
+    cursor: pointer;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  #chart-icon:hover {
+    transform: scale(1.3);
+    opacity: 0.9;
+  }
+
+</style>
+
+
+
+
+  <!-- MENU OVERLAY -->
+  <div id="menu-overlay" class="menu-overlay">
+    <div class="menu-content">
+      <ul>
+        <li><a href="index.html" onclick="closeMenu()">Home</a></li>
+        <li><a href="find.html" onclick="closeMenu()">School Finder</a></li>
+         <li><a href="graph3.html" onclick="closeMenu()">Statistiques</a></li>
+        <li><a href="stats4.html" onclick="closeMenu()">Ranking</a></li>
+       
+      </ul>
+    </div>
+  </div>
+
+ <div class="charts-container">
+
+  <div class="chart-wrapper">
+    <h3>Bar Comparison</h3>
+    
+    <canvas id="barChart"></canvas>
+  </div>
+
+ <a href="edc2.html" id="chart-icon">🕸️</a>
+
+</div>
+
+<script>
+
+    const menuOverlay = document.getElementById("menu-overlay");
+
+  function toggleMenu() {
+    menuOverlay.classList.toggle("active");
+  }
+
+  function closeMenu() {
+    menuOverlay.classList.remove("active");
+  }
+
+  // Close menu if clicking outside the menu content
+  menuOverlay.addEventListener("click", function(e) {
+    if (!e.target.closest(".menu-content")) {
+      closeMenu();
+    }
+  });
+  
+// Categories
+const categories = [
+  "Scholarship", "Academic Quality", "Employment Opportunities", "Innovation", 
+  "International", "Research", "Infrastructure", "Sports", "Food", "Environment"
+];
+
+// Datasets
+const edcScores = [4,5,4,5,5,3,4,2,3,4];
+const generalMean = [3,4,4,4,4,4,4,3,3,4];
+const top10 = [2.17,5,4.83,4.83,4.67,4.83,4.67,3.5,3.67,4.5];
+
+// Visibility trackers
+let showEDC = true, showMean = true, showTop10 = true;
+
+// Bar Chart
+const barCtx = document.getElementById('barChart').getContext('2d');
+const barChart = new Chart(barCtx, {
+  type: 'bar',
+  data: {
+    labels: categories,
+    datasets: [
+      { label: 'EDC Paris', data: edcScores, backgroundColor: 'rgba(0,123,255,0.7)', hidden: !showEDC },
+      { label: 'General Mean', data: generalMean, backgroundColor: 'rgba(255,165,0,0.7)', hidden: !showMean },
+      { label: 'Top 10%', data: top10, backgroundColor: 'rgba(0,200,0,0.7)', hidden: !showTop10 }
+    ]
+  },
+  options: {
+    responsive: true,
+    animation: { duration: 1000, easing: 'easeOutElastic' },
+    scales: { y: { beginAtZero:true, max:5, title: { display:true, text:'Score (0-5)' } } },
+    plugins: { legend: { position:'top' }, tooltip: { enabled:true } }
+  }
+});
+
+// Toggle buttons
+document.querySelectorAll('.btn-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const dataset = btn.dataset.toggle;
+    if(dataset==='edc'){ showEDC = !showEDC; barChart.data.datasets[0].hidden = !showEDC; }
+    if(dataset==='mean'){ showMean = !showMean; barChart.data.datasets[1].hidden = !showMean; }
+    if(dataset==='top10'){ showTop10 = !showTop10; barChart.data.datasets[2].hidden = !showTop10; }
+    barChart.update({duration:800, easing:'easeOutElastic'});
+  });
+
+});
+
+
+</script>
+
+</body>
+</html>

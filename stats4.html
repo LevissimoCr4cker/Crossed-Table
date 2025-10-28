@@ -115,19 +115,24 @@ h2 { text-align: center; margin: 0.8rem 0; color: #1e40af; font-size: 1.4rem; fo
 
 <header>
   <h1>Ranking</h1>
-  <div class="hamburger" onclick="toggleMenu()">Menu</div>
+  <div class="hamburger" onclick="toggleMenu()">
+      <i class="fas fa-bars"></i>
+    </div>
 </header>
 
-<div id="menu-overlay" class="menu-overlay">
-  <div class="menu-content">
-    <h3>Menu</h3>
-    <ul>
-      <li><a href="index.html">Home</a></li>
-      <li><a href="#" onclick="openAddPopup();toggleMenu();return false;">Add New</a></li>
-      <li><a href="#">About</a></li>
-    </ul>
+<!-- FULL-SCREEN MENU OVERLAY -->
+  <div id="menu-overlay" class="menu-overlay">
+    <div class="menu-content">
+      
+      <ul>
+        <li><a href="index.html" onclick="closeMenu()">Home</a></li>
+        <li><a href="find.html" onclick="closeMenu()">School Finder</a></li>
+        <li><a href="graph3.html" onclick="closeMenu()">Statistiques</a></li>
+    
+        <li><a href="edc2.html" onclick="closeMenu()">EDC Classification</a></li>
+      </ul>
+    </div>
   </div>
-</div>
 
 <main>
   <h2>Current Ranking (0 – 100)</h2>
@@ -156,6 +161,24 @@ h2 { text-align: center; margin: 0.8rem 0; color: #1e40af; font-size: 1.4rem; fo
 </div>
 
 <script>
+
+  const menuOverlay = document.getElementById("menu-overlay");
+
+  function toggleMenu() {
+    menuOverlay.classList.toggle("active");
+  }
+
+  function closeMenu() {
+    menuOverlay.classList.remove("active");
+  }
+
+  // Close menu if clicking outside the menu content
+  menuOverlay.addEventListener("click", function(e) {
+    if (!e.target.closest(".menu-content")) {
+      closeMenu();
+    }
+  });
+
 let schools = [];           // from JSON
 let userSchools = [];       // only user-added
 let weights = {};
