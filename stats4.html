@@ -67,8 +67,8 @@ h2 { text-align: center; margin: 0.8rem 0; color: #1e40af; font-size: 1.4rem; fo
 .star.hovered { color: #fbbf24 !important; transform: scale(1.15); }
 .star.selected { color: #f59e0b !important; transform: scale(1.1); }
 
-.star-row { display: flex; flex-direction: column; gap: 0.3rem; }
-.star-row label { font-weight: 500; color: #475569; font-size: 0.95rem; }
+.star-row { display: flex; flex-direction: column; gap: 0.3rem; align-items: center; }
+.star-row label { font-weight: 500; color: #475569; font-size: 0.95rem; text-align: center; }
 #star-container { display: grid; gap: 1rem; margin-top: 1rem; }
 @media (min-width: 640px) { #star-container { grid-template-columns: 1fr 1fr; } }
 
@@ -107,7 +107,18 @@ h2 { text-align: center; margin: 0.8rem 0; color: #1e40af; font-size: 1.4rem; fo
 .floating-star:hover { background: #d97706; transform: scale(1.1); }
 
 /* CHART */
-#chart-section { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-top: 1rem; }
+#chart-section { 
+  background: white; 
+  padding: 3rem; 
+  border-radius: 12px; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+  margin-bottom: 4rem; 
+  height: 580px;
+}
+#distributionChart {
+  max-height: 500px;
+  max-width: 100%;
+}
 </style>
 </head>
 
@@ -116,32 +127,30 @@ h2 { text-align: center; margin: 0.8rem 0; color: #1e40af; font-size: 1.4rem; fo
 <header>
   <h1>Ranking</h1>
   <div class="hamburger" onclick="toggleMenu()">
-      <i class="fas fa-bars"></i>
-    </div>
+    <i class="fas fa-bars"></i>
+  </div>
 </header>
 
 <!-- FULL-SCREEN MENU OVERLAY -->
-  <div id="menu-overlay" class="menu-overlay">
-    <div class="menu-content">
-      
-      <ul>
-        <li><a href="index.html" onclick="closeMenu()">Home</a></li>
-        <li><a href="find.html" onclick="closeMenu()">School Finder</a></li>
-        <li><a href="graph3.html" onclick="closeMenu()">Statistiques</a></li>
-    
-        <li><a href="edc2.html" onclick="closeMenu()">EDC Classification</a></li>
-      </ul>
-    </div>
+<div id="menu-overlay" class="menu-overlay">
+  <div class="menu-content">
+    <ul>
+      <li><a href="index.html" onclick="closeMenu()">Home</a></li>
+      <li><a href="find.html" onclick="closeMenu()">School Finder</a></li>
+      <li><a href="graph3.html" onclick="closeMenu()">Statistiques</a></li>
+      <li><a href="edc2.html" onclick="closeMenu()">EDC Classification</a></li>
+    </ul>
   </div>
+</div>
 
 <main>
-  <h2>Current Ranking (0 – 100)</h2>
-  <div id="ranking-table"><p>Loading…</p></div>
-
   <div id="chart-section" style="display:none;">
     <h2>Score Distribution</h2>
     <canvas id="distributionChart"></canvas>
   </div>
+
+  <h2>Current Ranking (0 – 100)</h2>
+  <div id="ranking-table"><p>Loading…</p></div>
 </main>
 
 <button class="floating-star" onclick="openAddPopup()">
@@ -155,32 +164,13 @@ h2 { text-align: center; margin: 0.8rem 0; color: #1e40af; font-size: 1.4rem; fo
     <div id="star-container"></div>
     <div class="popup-buttons">
       <button class="btn primary" onclick="addAndRank()">Add & Rank</button>
-      <button class="btn secondary" onclick="closeAddPopup()">Cancel</button>
     </div>
   </div>
 </div>
 
 <script>
-
-  const menuOverlay = document.getElementById("menu-overlay");
-
-  function toggleMenu() {
-    menuOverlay.classList.toggle("active");
-  }
-
-  function closeMenu() {
-    menuOverlay.classList.remove("active");
-  }
-
-  // Close menu if clicking outside the menu content
-  menuOverlay.addEventListener("click", function(e) {
-    if (!e.target.closest(".menu-content")) {
-      closeMenu();
-    }
-  });
-
-let schools = [];           // from JSON
-let userSchools = [];       // only user-added
+let schools = [];
+let userSchools = [];
 let weights = {};
 let customRatings = {};
 let chart = null;
@@ -194,121 +184,79 @@ const CRITERIA = [
   "Campus Environment"
 ];
 
-// === HARDCODED 52 SCHOOLS (YOUR LIST) ===
-const HARDCODED_SCORES = [
-  { name: "Stanford University", score: 92.0 },
-  { name: "Harvard University", score: 88.0 },
-  { name: "International Innovation University", score: 88.0 },
-  { name: "ETH Zurich", score: 86.0 },
-  { name: "International Science Academy", score: 86.0 },
-  { name: "Elite International College", score: 84.0 },
-  { name: "Western Science University", score: 84.0 },
-  { name: "MIT", score: 82.0 },
-  { name: "University of Oxford", score: 82.0 },
-  { name: "University of Cambridge", score: 82.0 },
-  { name: "Urban Science University", score: 80.0 },
-  { name: "Eastern Research University", score: 80.0 },
-  { name: "Innovation State University", score: 80.0 },
-  { name: "Global Tech Institute", score: 78.0 },
-  { name: "Northern Leadership Institute", score: 78.0 },
-  { name: "Pacific Leadership University", score: 78.0 },
-  { name: "University of Tokyo", score: 76.0 },
-  { name: "Pacific Research University", score: 76.0 },
-  { name: "International Leadership College", score: 76.0 },
-  { name: "National Technical University", score: 76.0 },
-  { name: "Metropolitan Technology Institute", score: 76.0 },
-  { name: "Southern Technical University", score: 76.0 },
-  { name: "Global Tech College", score: 76.0 },
-  { name: "Continental University", score: 74.0 },
-  { name: "TechPioneers Academy", score: 74.0 },
-  { name: "Central University", score: 74.0 },
-  { name: "Northern Technical Institute", score: 74.0 },
-  { name: "Urban Innovation Hub", score: 74.0 },
-  { name: "Regional Science Institute", score: 74.0 },
-  { name: "USP (University of São Paulo)", score: 72.0 },
-  { name: "Southern Innovation Hub", score: 72.0 },
-  { name: "Global Business School", score: 72.0 },
-  { name: "Global Commerce University", score: 72.0 },
-  { name: "Sorbonne University", score: 68.0 },
-  { name: "Metropolitan State University", score: 66.0 },
-  { name: "Capital City University", score: 66.0 },
-  { name: "State Polytechnic", score: 62.0 },
-  { name: "Southern Commerce College", score: 62.0 },
-  { name: "National Business Academy", score: 62.0 },
-  { name: "Western Finance College", score: 60.0 },
-  { name: "Regional Arts Institute", score: 60.0 },
-  { name: "Western Arts College", score: 60.0 },
-  { name: "Continental Arts College", score: 60.0 },
-  { name: "Eastern Finance Academy", score: 60.0 },
-  { name: "Capital Arts Institute", score: 60.0 },
-  { name: "Metropolitan Arts College", score: 60.0 },
-  { name: "Northern Business School", score: 58.0 },
-  { name: "Eastern Arts Academy", score: 58.0 },
-  { name: "Local Polytechnic", score: 52.0 }
-];
+// Calculate weighted score for a school
+function calculateWeightedScore(school) {
+  let weightedSum = 0;
+  let totalWeight = 0;
+  
+  CRITERIA.forEach(criterion => {
+    const rating = school[criterion] || 0;
+    const weight = weights[criterion] || 0;
+    
+    weightedSum += rating * weight;
+    totalWeight += weight;
+  });
+  
+  if (totalWeight === 0) return 0;
+  
+  const weightedAverage = weightedSum / totalWeight;
+  const normalizedScore = (weightedAverage / 5) * 100;
+  
+  return normalizedScore;
+}
 
 async function loadData() {
   try {
     const res = await fetch('data/schools.json');
     if (res.ok) {
-      const data = await res.json();
-      schools = data.map(s => ({ ...s, fromJson: true }));
+      schools = await res.json();
     } else {
-      schools = HARDCODED_SCORES.map(s => {
-        const obj = { School: s.name };
-        CRITERIA.forEach(c => obj[c] = 3); // dummy
-        return obj;
-      });
+      console.warn('Could not load schools.json, using empty array');
+      schools = [];
     }
   } catch (e) {
-    schools = HARDCODED_SCORES.map(s => {
-      const obj = { School: s.name };
-      CRITERIA.forEach(c => obj[c] = 3);
-      return obj;
-    });
+    console.warn('Error loading schools.json:', e);
+    schools = [];
   }
 
-  // Default weights
   CRITERIA.forEach(c => weights[c] = 5);
 
-  // Try CSV
   try {
     const cRes = await fetch('data/class.csv');
     if (cRes.ok) {
       const txt = await cRes.text();
       Papa.parse(txt, {
         header: true,
+        dynamicTyping: true,
+        skipEmptyLines: true,
         complete: r => {
           r.data.forEach(row => {
             const c = row.Criterion?.trim();
             const i = parseFloat(row.Importance);
-            if (c && !isNaN(i)) weights[c] = i;
+            if (c && !isNaN(i)) {
+              weights[c] = i;
+            }
           });
         }
       });
     }
-  } catch(e) {}
+  } catch(e) {
+    console.warn('Could not load class.csv, using default weights');
+  }
 
-  loadFromLocal();
+  localStorage.removeItem('userSchools');
+  userSchools = [];
+  
   displayRanking();
   document.getElementById('chart-section').style.display = 'block';
-  drawChart(); // SHOW CHART FROM START
-}
-
-function rawScore(s) {
-  return CRITERIA.reduce((sum, C) => sum + (s[C] || 0) * (weights[C] || 5), 0);
-}
-function maxPossible() {
-  return CRITERIA.reduce((s, C) => s + 5 * (weights[C] || 5), 0);
-}
-function normalizedScore(s) {
-  const score = s.score || (HARDCODED_SCORES.find(h => h.name === s.School)?.score) || 0;
-  return score > 0 ? score : (rawScore(s) / maxPossible()) * MAX_SCORE;
+  drawChart();
 }
 
 function displayRanking(custom = null) {
   const all = [...schools, ...userSchools];
-  all.forEach(s => s.score = normalizedScore(s));
+  
+  all.forEach(s => s.score = calculateWeightedScore(s));
+  
   all.sort((a, b) => b.score - a.score);
 
   const tbl = document.getElementById('ranking-table');
@@ -324,7 +272,7 @@ function displayRanking(custom = null) {
   html += `</table>`;
   if (custom) {
     const rank = all.indexOf(custom) + 1;
-    html += `<p><strong>Your rank: #${rank} / ${all.length}</strong></p>`;
+    html += `<p style="text-align: center; margin-top: 1rem; font-size: 1.1rem;"><strong>Your rank: #${rank} / ${all.length}</strong></p>`;
   }
   tbl.innerHTML = html;
 }
@@ -356,6 +304,7 @@ function buildStars() {
     });
   });
 }
+
 function fillStars(stars, upTo, cls) {
   stars.forEach(s => s.classList.toggle(cls, +s.dataset.value <= upTo));
 }
@@ -366,6 +315,7 @@ function openAddPopup() {
   buildStars();
   document.getElementById('add-popup').classList.add('open');
 }
+
 function closeAddPopup() {
   document.getElementById('add-popup').classList.remove('open');
 }
@@ -380,128 +330,232 @@ function addAndRank() {
   CRITERIA.forEach(C => newSchool[C] = customRatings[C]);
   userSchools = userSchools.filter(s => s.School !== name);
   userSchools.push(newSchool);
-  saveToLocal();
   displayRanking(newSchool);
-  drawChart(newSchool.score);
+  drawChart(newSchool);
   closeAddPopup();
 }
 
-function saveToLocal() {
-  localStorage.setItem('userSchools', JSON.stringify(userSchools));
-}
-function loadFromLocal() {
-  const stored = localStorage.getItem('userSchools');
-  if (stored) {
-    try { userSchools = JSON.parse(stored); } catch(e) { userSchools = []; }
+function drawChart(highlightSchool = null) {
+  const all = [...schools, ...userSchools];
+  all.forEach(s => s.score = calculateWeightedScore(s));
+  
+  const scores = all.map(s => s.score);
+  const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const variance = scores.reduce((sum, s) => sum + Math.pow(s - mean, 2), 0) / scores.length;
+  const stdDev = Math.sqrt(variance);
+  
+  const sorted = [...all].sort((a, b) => a.score - b.score);
+  const bottom10Index = Math.floor(sorted.length * 0.10);
+  const top10Index = Math.floor(sorted.length * 0.90);
+  const bottom10Threshold = sorted[bottom10Index]?.score || 0;
+  const top10Threshold = sorted[top10Index]?.score || 100;
+  
+  const minScore = Math.min(...scores);
+  const maxScore = Math.max(...scores);
+  const curveData = [];
+  for (let x = minScore - 5; x <= maxScore + 5; x += 0.5) {
+    const z = (x - mean) / stdDev;
+    const y = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * z * z);
+    curveData.push({ x, y });
   }
-}
-
-function drawChart() {
-  const curve = [];
-  for (let x = -3; x <= 3; x += 0.05) {
-    const y = Math.exp(-0.5 * x * x);
-    curve.push({ x, y });
-  }
+  
+  const schoolPoints = all.map(s => {
+    let color, size, label;
+    if (s === highlightSchool) {
+      color = '#f59e0b';
+      size = 12;
+      label = `${s.School} (YOU)`;
+    } else if (s.score <= bottom10Threshold) {
+      color = '#ef4444';
+      size = 6;
+      label = s.School;
+    } else if (s.score >= top10Threshold) {
+      color = '#22c55e';
+      size = 6;
+      label = s.School;
+    } else {
+      color = '#3b82f6';
+      size = 5;
+      label = s.School;
+    }
+    
+    const z = (s.score - mean) / stdDev;
+    const y = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * z * z);
+    
+    return {
+      x: s.score,
+      y: y * 0.3,
+      school: s.School,
+      actualScore: s.score.toFixed(1),
+      color,
+      size,
+      label
+    };
+  });
 
   const ctx = document.getElementById('distributionChart').getContext('2d');
   if (chart) chart.destroy();
 
+  const annotations = {
+    meanLine: {
+      type: 'line',
+      xMin: mean,
+      xMax: mean,
+      borderColor: '#1e40af',
+      borderWidth: 3,
+      borderDash: [8, 4],
+      label: {
+        content: `Mean: ${mean.toFixed(1)}`,
+        enabled: true,
+        position: 'start',
+        backgroundColor: '#1e40af',
+        color: '#fff',
+        font: { weight: 'bold', size: 12 }
+      }
+    },
+    bottom10Line: {
+      type: 'line',
+      xMin: bottom10Threshold,
+      xMax: bottom10Threshold,
+      borderColor: '#ef4444',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      label: {
+        content: 'Bottom 10%',
+        enabled: true,
+        position: 'end',
+        backgroundColor: '#ef4444',
+        color: '#fff',
+        font: { size: 10 }
+      }
+    },
+    top10Line: {
+      type: 'line',
+      xMin: top10Threshold,
+      xMax: top10Threshold,
+      borderColor: '#22c55e',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      label: {
+        content: 'Top 10%',
+        enabled: true,
+        position: 'end',
+        backgroundColor: '#22c55e',
+        color: '#fff',
+        font: { size: 10 }
+      }
+    }
+  };
+
+  if (highlightSchool) {
+    const yourScore = highlightSchool.score;
+    annotations.yourSchoolLine = {
+      type: 'line',
+      xMin: yourScore,
+      xMax: yourScore,
+      borderColor: '#f59e0b',
+      borderWidth: 3,
+      borderDash: [6, 3],
+      label: {
+        content: `Your School: ${yourScore.toFixed(1)}`,
+        enabled: true,
+        position: 'center',
+        backgroundColor: '#f59e0b',
+        color: '#fff',
+        font: { weight: 'bold', size: 12 }
+      }
+    };
+  }
+
   chart = new Chart(ctx, {
-    type: 'line',
+    type: 'scatter',
     data: {
-      datasets: [{
-        label: 'Bell Curve',
-        data: curve,
-        borderColor: '#1e40af',
-        backgroundColor: 'rgba(59,130,246,0.1)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 0,
-        borderWidth: 3
-      }]
+      datasets: [
+        {
+          label: 'Bell Curve',
+          type: 'line',
+          data: curveData,
+          borderColor: '#1e40af',
+          backgroundColor: 'rgba(59,130,246,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          borderWidth: 3,
+          order: 2
+        },
+        {
+          label: 'Schools',
+          data: schoolPoints,
+          backgroundColor: schoolPoints.map(p => p.color),
+          borderColor: schoolPoints.map(p => p.color),
+          borderWidth: 2,
+          pointRadius: schoolPoints.map(p => p.size),
+          pointHoverRadius: schoolPoints.map(p => p.size + 3),
+          order: 1
+        }
+      ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        title: { display: true, text: 'Your Position in the World', font: { size: 18, weight: '600' }, color: '#1e40af' },
-        tooltip: { enabled: false },
-        annotation: {
-          annotations: [
-            {
-              type: 'box',
-              xMin: -3, xMax: -2,
-              backgroundColor: 'rgba(239,68,68,0.3)',
-              borderWidth: 0,
-              label: { content: 'Bottom 2.3%', color: '#fff', backgroundColor: 'rgba(0,0,0,0.7)', font: { size: 11 } },
-              enter: ctx => ctx.element.options.backgroundColor = 'rgba(239,68,68,0.6)',
-              leave: ctx => ctx.element.options.backgroundColor = 'rgba(239,68,68,0.3)'
-            },
-            {
-              type: 'box',
-              xMin: -2, xMax: -1,
-              backgroundColor: 'rgba(239,68,68,0.2)',
-              borderWidth: 0,
-              label: { content: '13.6%', color: '#fff', backgroundColor: 'rgba(0,0,0,0.7)', font: { size: 11 } },
-              enter: ctx => ctx.element.options.backgroundColor = 'rgba(239,68,68,0.5)',
-              leave: ctx => ctx.element.options.backgroundColor = 'rgba(239,68,68,0.2)'
-            },
-            {
-              type: 'box',
-              xMin: -1, xMax: 1,
-              backgroundColor: 'rgba(59,130,246,0.15)',
-              borderWidth: 0,
-              label: { content: '68% – Most Schools', color: '#fff', backgroundColor: 'rgba(0,0,0,0.7)', font: { size: 12, weight: 'bold' } },
-              enter: ctx => ctx.element.options.backgroundColor = 'rgba(59,130,246,0.4)',
-              leave: ctx => ctx.element.options.backgroundColor = 'rgba(59,130,246,0.15)'
-            },
-            {
-              type: 'box',
-              xMin: 1, xMax: 2,
-              backgroundColor: 'rgba(34,197,94,0.2)',
-              borderWidth: 0,
-              label: { content: 'Top 13.6%', color: '#fff', backgroundColor: 'rgba(0,0,0,0.7)', font: { size: 11 } },
-              enter: ctx => ctx.element.options.backgroundColor = 'rgba(34,197,94,0.5)',
-              leave: ctx => ctx.element.options.backgroundColor = 'rgba(34,197,94,0.2)'
-            },
-            {
-              type: 'box',
-              xMin: 2, xMax: 3,
-              backgroundColor: 'rgba(34,197,94,0.3)',
-              borderWidth: 0,
-              label: { content: 'Top 2.3%', color: '#fff', backgroundColor: 'rgba(0,0,0,0.7)', font: { size: 11 } },
-              enter: ctx => ctx.element.options.backgroundColor = 'rgba(34,197,94,0.6)',
-              leave: ctx => ctx.element.options.backgroundColor = 'rgba(34,197,94,0.3)'
-            },
-            {
-              type: 'line',
-              xMin: 0, xMax: 0,
-              borderColor: '#1e40af',
-              borderWidth: 2,
-              borderDash: [5, 5],
-              label: { content: 'Mean', enabled: true, position: 'top', backgroundColor: 'transparent', color: '#1e40af', font: { weight: 'bold' } }
+        title: { 
+          display: true, 
+          text: `Score Distribution | Mean: ${mean.toFixed(1)} | Std Dev: ${stdDev.toFixed(1)}`, 
+          font: { size: 16, weight: '600' }, 
+          color: '#1e40af' 
+        },
+        tooltip: {
+          enabled: true,
+          callbacks: {
+            label: (context) => {
+              if (context.dataset.label === 'Schools') {
+                const point = schoolPoints[context.dataIndex];
+                return [
+                  `${point.school}`,
+                  `Score: ${point.actualScore}`,
+                  `Rank: #${sorted.findIndex(s => s.School === point.school) + 1} / ${sorted.length}`
+                ];
+              }
+              return '';
             }
-          ]
+          },
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          padding: 12,
+          titleFont: { size: 14, weight: 'bold' },
+          bodyFont: { size: 13 }
+        },
+        legend: {
+          display: true,
+          labels: {
+            filter: (item) => item.text !== 'Schools',
+            generateLabels: () => [
+              { text: `🔴 Bottom 10% (< ${bottom10Threshold.toFixed(1)})`, fillStyle: '#ef4444', strokeStyle: '#ef4444' },
+              { text: '🔵 Normal Range (68%)', fillStyle: '#3b82f6', strokeStyle: '#3b82f6' },
+              { text: `🟢 Top 10% (> ${top10Threshold.toFixed(1)})`, fillStyle: '#22c55e', strokeStyle: '#22c55e' },
+              ...(highlightSchool ? [{ text: '🟠 Your School', fillStyle: '#f59e0b', strokeStyle: '#f59e0b' }] : [])
+            ]
+          }
+        },
+        annotation: {
+          annotations: annotations
         }
       },
       scales: {
         x: {
-          title: { display: true, text: 'Standard Deviations from Mean', color: '#475569' },
-          min: -3, max: 3,
-          ticks: {
-            callback: v => {
-              if (v === 0) return 'Mean';
-              if (v === 1 || v === -1) return '±1σ';
-              if (v === 2 || v === -2) return '±2σ';
-              return '';
-            },
-            color: '#64748b'
-          },
-          grid: { display: false }
+          title: { display: true, text: 'Score (0-100)', color: '#475569', font: { size: 14, weight: 'bold' } },
+          min: Math.max(0, minScore - 5),
+          max: Math.min(100, maxScore + 5),
+          ticks: { color: '#64748b' },
+          grid: { color: 'rgba(0,0,0,0.05)' }
         },
-        y: { display: false }
+        y: {
+          title: { display: true, text: 'Probability Density', color: '#475569' },
+          ticks: { color: '#64748b' },
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        }
       },
-      interaction: { mode: 'nearest', intersect: true }
+      interaction: { mode: 'point', intersect: false }
     }
   });
 }
@@ -509,6 +563,22 @@ function drawChart() {
 function toggleMenu() {
   document.getElementById('menu-overlay').classList.toggle('active');
 }
+
+function closeMenu() {
+  document.getElementById('menu-overlay').classList.remove('active');
+}
+
+document.getElementById('menu-overlay').addEventListener('click', function(e) {
+  if (!e.target.closest('.menu-content')) {
+    closeMenu();
+  }
+});
+
+document.getElementById('add-popup').addEventListener('click', function(e) {
+  if (!e.target.closest('.popup-content')) {
+    closeAddPopup();
+  }
+});
 
 window.onload = loadData;
 </script>
