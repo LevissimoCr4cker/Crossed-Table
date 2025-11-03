@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Distribution des Écoles</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  
+  <style>
+   /* === YOUR AESTHETIC === */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+html, body { height: 100%; overflow: hidden; }
+body { background: #f8fafc; color: #1e293b; line-height: 1.6; display: flex; flex-direction: column; }
+
+
+   /* HEADER */
+header {
+  background: #1e40af; color: white; padding: 0.8rem 1.5rem;
+  display: flex; justify-content: space-between; align-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; flex-shrink: 0;
+}
+header h1 { font-size: 1.4rem; font-weight: 600; }
+.hamburger { font-size: 1.5rem; cursor: pointer; padding: 6px; border-radius: 6px; transition: background 0.2s; }
+.hamburger:hover { background: rgba(255,255,255,0.2); }
+
+.hamburger {
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.hamburger:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* === FULL-SCREEN MENU OVERLAY === */
+.menu-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s ease;
+  z-index: 999;
+}
+
+.menu-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.menu-content {
+  background: rgba(59, 130, 246, 0.95);
+  padding: 2.5rem 1.5rem;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  transform: scale(0.8);
+  transition: transform 0.4s ease;
+}
+
+.menu-overlay.active .menu-content {
+  transform: scale(1);
+}
+
+.menu-content h3 {
+  color: white;
+  margin-bottom: 1.5rem;
+  font-size: 1.6rem;
+}
+
+.menu-content ul { list-style: none; }
+.menu-content li { margin: 0.8rem 0; }
+.menu-content a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  display: block;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  transition: all 0.3s;
+}
+.menu-content a:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(6px);
+}
+
+    /* === CONTROLS === */
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin: 20px auto;
+      max-width: 600px;
+      flex-wrap: wrap;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(3px);
+    }
+
+    select {
+      padding: 10px 15px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background: rgba(244, 248, 253, 0.7);
+      color: #4b4444;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    select:hover {
+      background: rgba(223, 227, 236, 0.8);
+      transform: translateY(-2px);
+    }
+
+    select:focus {
+      outline: 2px solid #9598a2;
+    }
+
+    .controls label {
+      color: #4b5563;
+      font-weight: 600;
+    }
+
+    /* === CHART === */
+    .chart-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 30px auto;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(5px);
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 400px !important;
+    }
+
+    /* === BUTTONS === */
+    .return-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      background: rgba(59, 130, 246, 0.7);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .return-btn:hover {
+      background: rgba(37, 99, 235, 0.8);
+      transform: translateY(-2px);
+    }
+
+    .bar-graph-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      padding: 10px;
+      font-size: 1.5rem;
+      background: rgba(59, 130, 246, 0.7);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bar-graph-btn:hover {
+      background: rgba(37, 99, 235, 0.8);
+      transform: translateY(-2px);
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      header { font-size: 1.5rem; padding: 15px; }
+      .controls { flex-direction: column; gap: 15px; }
+      select { width: 100%; max-width: 300px; }
+      .chart-container { padding: 15px; }
+      canvas { height: 300px !important; }
+    }
+
+    @media (max-width: 480px) {
+      header { font-size: 1.2rem; padding: 10px; }
+      .chart-container { padding: 10px; }
+      canvas { height: 250px !important; }
+      .return-btn, .bar-graph-btn { bottom: 10px; font-size: 0.8rem; }
+      .bar-graph-btn { width: 36px; height: 36px; font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER WITH HAMBURGER -->
+  <header>
+    <h1>Distribution des Écoles</h1>
+    <div class="hamburger" onclick="toggleMenu()">
+      <i class="fas fa-bars"></i>
+    </div>
+  </header>
+
+  <!-- MENU OVERLAY -->
+  <div id="menu-overlay" class="menu-overlay">
+    <div class="menu-content">
+      <ul>
+        <li><a href="index.html" onclick="closeMenu()">Accueil</a></li>
+        <li><a href="find.html" onclick="closeMenu()">Recherche d'École</a></li>
+        <li><a href="stats4.html" onclick="closeMenu()">Classement</a></li>
+        <li><a href="edc2.html" onclick="closeMenu()">Classification EDC</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <label for="criterion">Sélectionner le Critère:</label>
+    <select id="criterion">
+      <option value="Scholarship">Bourses</option>
+      <option value="Academic Quality">Qualité Académique</option>
+      <option value="Employment Opportunities">Opportunités d'Emploi</option>
+      <option value="Innovation">Innovation</option>
+      <option value="International">International</option>
+      <option value="Research">Recherche</option>
+      <option value="Infrastructure">Infrastructure</option>
+      <option value="Sports">Sports</option>
+      <option value="Food">Restauration</option>
+      <option value="Environment">Environnement</option>
+    </select>
+  </div>
+
+  <!-- CHART -->
+  <div class="chart-container">
+    <canvas id="pieChart"></canvas>
+  </div>
+
+  <!-- BUTTONS -->
+  
+  <button class="bar-graph-btn" onclick="window.location.href='graphics2.html'" title="Voir Graphiques en Barres">📊</button>
+  <script>
+    let schools = [];
+    let pieChart = null;
+
+    // Load CSV
+    async function loadCSV() {
+      try {
+        const response = await fetch("../data.csv");
+        if (!response.ok) throw new Error("CSV not found");
+        const text = await response.text();
+        const lines = text.trim().split("\n");
+        const headers = lines[0].split(",");
+        schools = lines.slice(1).map(line => {
+          const values = line.split(",");
+          const obj = {};
+          headers.forEach((h, i) => {
+            const key = h.trim();
+            const value = values[i]?.trim();
+            obj[key] = isNaN(value) ? value : Number(value);
+          });
+          return obj;
+        });
+        updateChart(); // First draw
+      } catch (e) {
+        document.body.innerHTML += `<p style="color:red;text-align:center;">data.csv introuvable. Utilisation de données de démonstration.</p>`;
+        schools = Array(50).fill().map((_, i) => ({
+          Scholarship: Math.floor(Math.random() * 5) + 1,
+          "Academic Quality": Math.floor(Math.random() * 5) + 1,
+          "Employment Opportunities": Math.floor(Math.random() * 5) + 1,
+          Innovation: Math.floor(Math.random() * 5) + 1,
+          International: Math.floor(Math.random() * 5) + 1,
+          Research: Math.floor(Math.random() * 5) + 1,
+          Infrastructure: Math.floor(Math.random() * 5) + 1,
+          Sports: Math.floor(Math.random() * 5) + 1,
+          Food: Math.floor(Math.random() * 5) + 1,
+          Environment: Math.floor(Math.random() * 5) + 1
+        }));
+        updateChart();
+      }
+    }
+
+    // Count stars
+    function getCounts(criterion) {
+      const counts = [0, 0, 0, 0, 0];
+      schools.forEach(s => {
+        const val = s[criterion];
+        if (val >= 1 && val <= 5) counts[val - 1]++;
+      });
+      return counts;
+    }
+
+    // Draw pie
+    function updateChart() {
+      const criterion = document.getElementById("criterion").value;
+      const counts = getCounts(criterion);
+      const ctx = document.getElementById("pieChart").getContext("2d");
+
+      if (pieChart) pieChart.destroy();
+      pieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ["1 étoile", "2 étoiles", "3 étoiles", "4 étoiles", "5 étoiles"],
+          datasets: [{
+            data: counts,
+            backgroundColor: ["#f44336", "#ff9800", "#ffeb3b", "#4caf50", "#2196f3"]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: `` }
+          },
+          animation: { duration: 800, easing: 'easeInOutQuad' }
+        }
+      });
+    }
+
+    // AUTO UPDATE ON SELECT CHANGE
+    document.getElementById("criterion").addEventListener("change", updateChart);
+
+    // MENU FUNCTIONS
+    function toggleMenu() {
+      document.getElementById("menu-overlay").classList.toggle("active");
+    }
+    function closeMenu() {
+      document.getElementById("menu-overlay").classList.remove("active");
+    }
+// Close menu if clicking outside the menu content
+document.getElementById('menu-overlay').addEventListener('click', function(e) {
+  if (!e.target.closest('.menu-content')) {
+    closeMenu();
+  }
+});
+
+    // INIT
+    loadCSV();
+  </script>
+</body>
+</html>

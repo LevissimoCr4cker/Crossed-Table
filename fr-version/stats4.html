@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Classement Pondéré des Écoles</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<style>
+/* === YOUR AESTHETIC === */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+html, body { height: 100%; overflow: hidden; }
+body { background: #f8fafc; color: #1e293b; line-height: 1.6; display: flex; flex-direction: column; }
+
+/* HEADER */
+header {
+  background: #1e40af; color: white; padding: 0.8rem 1.5rem;
+  display: flex; justify-content: space-between; align-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; flex-shrink: 0;
+}
+header h1 { font-size: 1.4rem; font-weight: 600; }
+.hamburger { font-size: 1.5rem; cursor: pointer; padding: 6px; border-radius: 6px; transition: background 0.2s; }
+.hamburger:hover { background: rgba(255,255,255,0.2); }
+
+/* MENU */
+.menu-overlay {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  display: flex; justify-content: center; align-items: center;
+  opacity: 0; visibility: hidden; transition: all 0.4s ease; z-index: 999;
+}
+.menu-overlay.active { opacity: 1; visibility: visible; }
+.menu-content {
+  background: rgba(59,130,246,0.95); padding: 2.5rem 1.5rem; border-radius: 16px;
+  width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  transform: scale(0.8); transition: transform 0.4s ease;
+}
+.menu-overlay.active .menu-content { transform: scale(1); }
+.menu-content h3 { color: white; margin-bottom: 1.5rem; font-size: 1.6rem; }
+.menu-content ul { list-style: none; }
+.menu-content li { margin: 0.8rem 0; }
+.menu-content a {
+  color: white; text-decoration: none; font-size: 1.1rem; font-weight: 500;
+  display: block; padding: 0.6rem 1.2rem; border-radius: 10px; transition: all 0.3s;
+}
+.menu-content a:hover { background: rgba(255,255,255,0.2); transform: translateX(6px); }
+
+/* MAIN */
+main { flex: 1; overflow-y: auto; padding: 1rem; max-width: 1000px; margin: 0 auto; width: 100%; }
+h2 { text-align: center; margin: 0.8rem 0; color: #1e40af; font-size: 1.4rem; font-weight: 600; }
+
+/* TABLE */
+#ranking-table table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.95rem; }
+#ranking-table th, #ranking-table td { border: 1px solid #e2e8f0; padding: 0.6rem; text-align: center; }
+#ranking-table th { background: #1e40af; color: white; }
+#ranking-table tr.highlight { background: #dbeafe !important; font-weight: bold; }
+
+/* YELLOW STARS */
+.stars { display: flex; gap: 4px; }
+.star {
+  font-size: 1.3rem; color: #e2e8f0; cursor: pointer;
+  transition: color 0.25s ease, transform 0.2s ease;
+}
+.star.hovered { color: #fbbf24 !important; transform: scale(1.15); }
+.star.selected { color: #f59e0b !important; transform: scale(1.1); }
+
+.star-row { display: flex; flex-direction: column; gap: 0.3rem; align-items: center; }
+.star-row label { font-weight: 500; color: #475569; font-size: 0.95rem; text-align: center; }
+#star-container { display: grid; gap: 1rem; margin-top: 1rem; }
+@media (min-width: 640px) { #star-container { grid-template-columns: 1fr 1fr; } }
+
+/* POPUP */
+.popup-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  display: flex; justify-content: center; align-items: center;
+  opacity: 0; visibility: hidden; transition: all 0.4s; z-index: 1000;
+}
+.popup-overlay.open { opacity: 1; visibility: visible; }
+.popup-content {
+  background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 500px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3); transform: scale(0.8); transition: transform 0.4s;
+}
+.popup-overlay.open .popup-content { transform: scale(1); }
+.popup-content h3 { margin-bottom: 1rem; color: #1e40af; text-align: center; }
+#schoolName { width: 100%; padding: 0.8rem; margin: 1rem 0; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; }
+.popup-buttons { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; }
+.btn {
+  flex: 1; padding: 0.75rem; font-weight: 600; border: none; border-radius: 10px;
+  cursor: pointer; transition: all 0.3s; box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+.btn.primary { background: #3b82f6; color: white; }
+.btn.primary:hover { background: #2563eb; transform: translateY(-2px); }
+.btn.secondary { background: #e2e8f0; color: #1e293b; }
+.btn.secondary:hover { background: #cbd5e1; }
+
+/* YELLOW STAR BUTTON */
+.floating-star {
+  position: fixed; bottom: 80px; right: 20px;
+  background: #f59e0b; color: white; width: 56px; height: 56px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; box-shadow: 0 6px 16px rgba(245,158,11,0.3);
+  border: none; cursor: pointer; transition: all 0.3s; z-index: 999;
+}
+.floating-star:hover { background: #d97706; transform: scale(1.1); }
+
+/* CHART */
+#chart-section { 
+  background: white; 
+  padding: 3rem; 
+  border-radius: 12px; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+  margin-bottom: 4rem; 
+  height: 580px;
+}
+#distributionChart {
+  max-height: 500px;
+  max-width: 100%;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Classement</h1>
+  <div class="hamburger" onclick="toggleMenu()">
+    <i class="fas fa-bars"></i>
+  </div>
+</header>
+
+<!-- FULL-SCREEN MENU OVERLAY -->
+<div id="menu-overlay" class="menu-overlay">
+  <div class="menu-content">
+    <ul>
+      <li><a href="index.html" onclick="closeMenu()">Accueil</a></li>
+      <li><a href="find.html" onclick="closeMenu()">Recherche d'École</a></li>
+      <li><a href="graph3.html" onclick="closeMenu()">Statistiques</a></li>
+      <li><a href="edc2.html" onclick="closeMenu()">Classification EDC</a></li>
+    </ul>
+  </div>
+</div>
+
+<main>
+  <div id="chart-section" style="display:none;">
+    <h2>Distribution des Scores</h2>
+    <canvas id="distributionChart"></canvas>
+  </div>
+
+  <h2>Classement Actuel (0 – 100)</h2>
+  <div id="ranking-table"><p>Chargement…</p></div>
+</main>
+
+<button class="floating-star" onclick="openAddPopup()">
+  <i class="fas fa-star"></i>
+</button>
+
+<div id="add-popup" class="popup-overlay">
+  <div class="popup-content">
+    <h3>Ajouter Votre École</h3>
+    <input type="text" id="schoolName" placeholder="Nom de l'école">
+    <div id="star-container"></div>
+    <div class="popup-buttons">
+      <button class="btn primary" onclick="addAndRank()">Ajouter & Classer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let schools = [];
+let userSchools = [];
+let weights = {};
+let customRatings = {};
+let chart = null;
+const MAX_SCORE = 100;
+
+// 10 CRITERIA (English keys for data compatibility)
+const CRITERIA = [
+  "Scholarship Accessibility", "Academic Quality", "Employment Opportunities",
+  "Innovation & Modern Programs", "International Environment", "Research Activity",
+  "Infrastructure & IT Support", "Sports & Campus Life", "Food & Dining Facilities",
+  "Campus Environment"
+];
+
+// French translations for display
+const CRITERIA_FR = {
+  "Scholarship Accessibility": "Accessibilité des Bourses",
+  "Academic Quality": "Qualité Académique",
+  "Employment Opportunities": "Opportunités d'Emploi",
+  "Innovation & Modern Programs": "Innovation & Programmes Modernes",
+  "International Environment": "Environnement International",
+  "Research Activity": "Activité de Recherche",
+  "Infrastructure & IT Support": "Infrastructure & Support IT",
+  "Sports & Campus Life": "Sports & Vie sur Campus",
+  "Food & Dining Facilities": "Restauration & Repas",
+  "Campus Environment": "Environnement du Campus"
+};
+
+// Calculate weighted score for a school
+function calculateWeightedScore(school) {
+  let weightedSum = 0;
+  let totalWeight = 0;
+  
+  CRITERIA.forEach(criterion => {
+    const rating = school[criterion] || 0;
+    const weight = weights[criterion] || 0;
+    
+    weightedSum += rating * weight;
+    totalWeight += weight;
+  });
+  
+  if (totalWeight === 0) return 0;
+  
+  const weightedAverage = weightedSum / totalWeight;
+  const normalizedScore = (weightedAverage / 5) * 100;
+  
+  return normalizedScore;
+}
+
+async function loadData() {
+  try {
+    const res = await fetch('data/schools.json');
+    if (res.ok) {
+      schools = await res.json();
+    } else {
+      console.warn('Impossible de charger schools.json, utilisation d\'un tableau vide');
+      schools = [];
+    }
+  } catch (e) {
+    console.warn('Erreur lors du chargement de schools.json:', e);
+    schools = [];
+  }
+
+  CRITERIA.forEach(c => weights[c] = 5);
+
+  try {
+    const cRes = await fetch('data/class.csv');
+    if (cRes.ok) {
+      const txt = await cRes.text();
+      Papa.parse(txt, {
+        header: true,
+        dynamicTyping: true,
+        skipEmptyLines: true,
+        complete: r => {
+          r.data.forEach(row => {
+            const c = row.Criterion?.trim();
+            const i = parseFloat(row.Importance);
+            if (c && !isNaN(i)) {
+              weights[c] = i;
+            }
+          });
+        }
+      });
+    }
+  } catch(e) {
+    console.warn('Impossible de charger class.csv, utilisation des poids par défaut');
+  }
+
+  localStorage.removeItem('userSchools');
+  userSchools = [];
+  
+  displayRanking();
+  document.getElementById('chart-section').style.display = 'block';
+  drawChart();
+}
+
+function displayRanking(custom = null) {
+  const all = [...schools, ...userSchools];
+  
+  all.forEach(s => s.score = calculateWeightedScore(s));
+  
+  all.sort((a, b) => b.score - a.score);
+
+  const tbl = document.getElementById('ranking-table');
+  let html = `<table><tr><th>Rang</th><th>École</th><th>Score</th></tr>`;
+  all.forEach((s, i) => {
+    const you = s === custom ? ' (Vous)' : '';
+    html += `<tr ${s===custom?'class="highlight"':''}>
+      <td>${i + 1}</td>
+      <td>${s.School}${you}</td>
+      <td>${s.score.toFixed(1)}</td>
+    </tr>`;
+  });
+  html += `</table>`;
+  if (custom) {
+    const rank = all.indexOf(custom) + 1;
+    html += `<p style="text-align: center; margin-top: 1rem; font-size: 1.1rem;"><strong>Votre rang: #${rank} / ${all.length}</strong></p>`;
+  }
+  tbl.innerHTML = html;
+}
+
+function buildStars() {
+  const container = document.getElementById('star-container');
+  container.innerHTML = '';
+  CRITERIA.forEach(C => {
+    const div = document.createElement('div');
+    div.className = 'star-row';
+    div.innerHTML = `
+      <label>${CRITERIA_FR[C]}</label>
+      <div class="stars" data-key="${C}">
+        ${[1,2,3,4,5].map(i => `<i class="fas fa-star star" data-value="${i}"></i>`).join('')}
+      </div>`;
+    container.appendChild(div);
+  });
+
+  document.querySelectorAll('.stars').forEach(cont => {
+    const key = cont.dataset.key;
+    const stars = cont.querySelectorAll('.star');
+    stars.forEach(star => {
+      star.onclick = () => {
+        customRatings[key] = +star.dataset.value;
+        fillStars(stars, customRatings[key], 'selected');
+      };
+      star.onmouseenter = () => fillStars(stars, +star.dataset.value, 'hovered');
+      star.onmouseleave = () => fillStars(stars, customRatings[key] ?? 0, 'hovered');
+    });
+  });
+}
+
+function fillStars(stars, upTo, cls) {
+  stars.forEach(s => s.classList.toggle(cls, +s.dataset.value <= upTo));
+}
+
+function openAddPopup() {
+  customRatings = {};
+  document.getElementById('schoolName').value = '';
+  buildStars();
+  document.getElementById('add-popup').classList.add('open');
+}
+
+function closeAddPopup() {
+  document.getElementById('add-popup').classList.remove('open');
+}
+
+function addAndRank() {
+  const name = document.getElementById('schoolName').value.trim() || 'Mon École';
+  if (Object.keys(customRatings).length < CRITERIA.length) {
+    alert('Évaluez tous les 10 critères!');
+    return;
+  }
+  const newSchool = { School: name };
+  CRITERIA.forEach(C => newSchool[C] = customRatings[C]);
+  userSchools = userSchools.filter(s => s.School !== name);
+  userSchools.push(newSchool);
+  displayRanking(newSchool);
+  drawChart(newSchool);
+  closeAddPopup();
+}
+
+function drawChart(highlightSchool = null) {
+  const all = [...schools, ...userSchools];
+  all.forEach(s => s.score = calculateWeightedScore(s));
+  
+  const scores = all.map(s => s.score);
+  const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const variance = scores.reduce((sum, s) => sum + Math.pow(s - mean, 2), 0) / scores.length;
+  const stdDev = Math.sqrt(variance);
+  
+  const sorted = [...all].sort((a, b) => a.score - b.score);
+  const bottom10Index = Math.floor(sorted.length * 0.10);
+  const top10Index = Math.floor(sorted.length * 0.90);
+  const bottom10Threshold = sorted[bottom10Index]?.score || 0;
+  const top10Threshold = sorted[top10Index]?.score || 100;
+  
+  const minScore = Math.min(...scores);
+  const maxScore = Math.max(...scores);
+  const curveData = [];
+  for (let x = minScore - 5; x <= maxScore + 5; x += 0.5) {
+    const z = (x - mean) / stdDev;
+    const y = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * z * z);
+    curveData.push({ x, y });
+  }
+  
+  const schoolPoints = all.map(s => {
+    let color, size, label;
+    if (s === highlightSchool) {
+      color = '#f59e0b';
+      size = 12;
+      label = `${s.School} (VOUS)`;
+    } else if (s.score <= bottom10Threshold) {
+      color = '#ef4444';
+      size = 6;
+      label = s.School;
+    } else if (s.score >= top10Threshold) {
+      color = '#22c55e';
+      size = 6;
+      label = s.School;
+    } else {
+      color = '#3b82f6';
+      size = 5;
+      label = s.School;
+    }
+    
+    const z = (s.score - mean) / stdDev;
+    const y = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * z * z);
+    
+    return {
+      x: s.score,
+      y: y * 0.3,
+      school: s.School,
+      actualScore: s.score.toFixed(1),
+      color,
+      size,
+      label
+    };
+  });
+
+  const ctx = document.getElementById('distributionChart').getContext('2d');
+  if (chart) chart.destroy();
+
+  const annotations = {
+    meanLine: {
+      type: 'line',
+      xMin: mean,
+      xMax: mean,
+      borderColor: '#1e40af',
+      borderWidth: 3,
+      borderDash: [8, 4],
+      label: {
+        content: `Moyenne: ${mean.toFixed(1)}`,
+        enabled: true,
+        position: 'start',
+        backgroundColor: '#1e40af',
+        color: '#fff',
+        font: { weight: 'bold', size: 12 }
+      }
+    },
+    bottom10Line: {
+      type: 'line',
+      xMin: bottom10Threshold,
+      xMax: bottom10Threshold,
+      borderColor: '#ef4444',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      label: {
+        content: '10% Inférieur',
+        enabled: true,
+        position: 'end',
+        backgroundColor: '#ef4444',
+        color: '#fff',
+        font: { size: 10 }
+      }
+    },
+    top10Line: {
+      type: 'line',
+      xMin: top10Threshold,
+      xMax: top10Threshold,
+      borderColor: '#22c55e',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      label: {
+        content: 'Top 10%',
+        enabled: true,
+        position: 'end',
+        backgroundColor: '#22c55e',
+        color: '#fff',
+        font: { size: 10 }
+      }
+    }
+  };
+
+  if (highlightSchool) {
+    const yourScore = highlightSchool.score;
+    annotations.yourSchoolLine = {
+      type: 'line',
+      xMin: yourScore,
+      xMax: yourScore,
+      borderColor: '#f59e0b',
+      borderWidth: 3,
+      borderDash: [6, 3],
+      label: {
+        content: `Votre École: ${yourScore.toFixed(1)}`,
+        enabled: true,
+        position: 'center',
+        backgroundColor: '#f59e0b',
+        color: '#fff',
+        font: { weight: 'bold', size: 12 }
+      }
+    };
+  }
+
+  chart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Courbe en Cloche',
+          type: 'line',
+          data: curveData,
+          borderColor: '#1e40af',
+          backgroundColor: 'rgba(59,130,246,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          borderWidth: 3,
+          order: 2
+        },
+        {
+          label: 'Écoles',
+          data: schoolPoints,
+          backgroundColor: schoolPoints.map(p => p.color),
+          borderColor: schoolPoints.map(p => p.color),
+          borderWidth: 2,
+          pointRadius: schoolPoints.map(p => p.size),
+          pointHoverRadius: schoolPoints.map(p => p.size + 3),
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: { 
+          display: true, 
+          text: `Distribution des Scores | Moyenne: ${mean.toFixed(1)} | Écart-type: ${stdDev.toFixed(1)}`, 
+          font: { size: 16, weight: '600' }, 
+          color: '#1e40af' 
+        },
+        tooltip: {
+          enabled: true,
+          callbacks: {
+            label: (context) => {
+              if (context.dataset.label === 'Écoles') {
+                const point = schoolPoints[context.dataIndex];
+                return [
+                  `${point.school}`,
+                  `Score: ${point.actualScore}`,
+                  `Rang: #${sorted.findIndex(s => s.School === point.school) + 1} / ${sorted.length}`
+                ];
+              }
+              return '';
+            }
+          },
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          padding: 12,
+          titleFont: { size: 14, weight: 'bold' },
+          bodyFont: { size: 13 }
+        },
+        legend: {
+          display: true,
+          labels: {
+            filter: (item) => item.text !== 'Écoles',
+            generateLabels: () => [
+              { text: `🔴 10% Inférieur (< ${bottom10Threshold.toFixed(1)})`, fillStyle: '#ef4444', strokeStyle: '#ef4444' },
+              { text: '🔵 Plage Normale (68%)', fillStyle: '#3b82f6', strokeStyle: '#3b82f6' },
+              { text: `🟢 Top 10% (> ${top10Threshold.toFixed(1)})`, fillStyle: '#22c55e', strokeStyle: '#22c55e' },
+              ...(highlightSchool ? [{ text: '🟠 Votre École', fillStyle: '#f59e0b', strokeStyle: '#f59e0b' }] : [])
+            ]
+          }
+        },
+        annotation: {
+          annotations: annotations
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Score (0-100)', color: '#475569', font: { size: 14, weight: 'bold' } },
+          min: Math.max(0, minScore - 5),
+          max: Math.min(100, maxScore + 5),
+          ticks: { color: '#64748b' },
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        },
+        y: {
+          title: { display: true, text: 'Densité de Probabilité', color: '#475569' },
+          ticks: { color: '#64748b' },
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        }
+      },
+      interaction: { mode: 'point', intersect: false }
+    }
+  });
+}
+
+function toggleMenu() {
+  document.getElementById('menu-overlay').classList.toggle('active');
+}
+
+function closeMenu() {
+  document.getElementById('menu-overlay').classList.remove('active');
+}
+
+document.getElementById('menu-overlay').addEventListener('click', function(e) {
+  if (!e.target.closest('.menu-content')) {
+    closeMenu();
+  }
+});
+
+document.getElementById('add-popup').addEventListener('click', function(e) {
+  if (!e.target.closest('.popup-content')) {
+    closeAddPopup();
+  }
+});
+
+window.onload = loadData;
+</script>
+</body>
+</html>

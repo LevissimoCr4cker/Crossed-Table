@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recherche d'École</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <h1>Recherche d'École</h1>
+    <div class="hamburger" onclick="toggleMenu()">
+      <i class="fas fa-bars"></i>
+    </div>
+  </header>
+
+  <!-- FULL-SCREEN MENU OVERLAY -->
+  <div id="menu-overlay" class="menu-overlay">
+    <div class="menu-content">
+      
+      <ul>
+        <li><a href="index.html" onclick="closeMenu()">Accueil</a></li>
+        <li><a href="graph3.html" onclick="closeMenu()">Statistiques</a></li>
+        <li><a href="stats4.html" onclick="closeMenu()">Classement</a></li>
+        <li><a href="edc2.html" onclick="closeMenu()">Classification EDC</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <!-- CRITERIA SECTION -->
+    <section id="criteria">
+      <h2>Qu'est-ce qui compte pour vous ?</h2>
+      <div id="criteria-list"></div>
+      <div class="buttons">
+        <button id="find-btn" onclick="findSchools()">Rechercher</button>
+      </div>
+    </section>
+
+    <!-- RESULTS SECTION -->
+    <section id="results" style="display: none;">
+      <div class="results-header">
+        <h2>Meilleures Correspondances</h2>
+        <div class="result-buttons">
+          <button onclick="goBack()">Retour</button>
+          <button onclick="resetAll()">Réinitialiser</button>
+        </div>
+      </div>
+      <div id="school-list"></div>
+    </section>
+  </main>
+
+  <script src="../script.js"></script>
+</body>
+</html>

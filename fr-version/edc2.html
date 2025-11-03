@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Classification EDC Paris Business School</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+
+  <style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
+html, body { height: 100%; overflow: hidden; }
+body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #1e293b; display: flex; flex-direction: column; }
+
+/* HEADER */
+header {
+  background: rgba(30, 64, 175, 0.95); 
+  backdrop-filter: blur(10px);
+  color: white; 
+  padding: 1rem 1.5rem;
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2); 
+  z-index: 1000; 
+  flex-shrink: 0;
+}
+header h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: 0.5px; }
+.hamburger { 
+  font-size: 1.5rem; 
+  cursor: pointer; 
+  padding: 8px 12px; 
+  border-radius: 8px; 
+  transition: all 0.3s; 
+}
+.hamburger:hover { 
+  background: rgba(255,255,255,0.2); 
+  transform: scale(1.1);
+}
+
+/* MENU */
+.menu-overlay {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  display: flex; justify-content: center; align-items: center;
+  opacity: 0; visibility: hidden; transition: all 0.4s ease; z-index: 999;
+}
+.menu-overlay.active { opacity: 1; visibility: visible; }
+.menu-content {
+  background: rgba(59,130,246,0.95); padding: 2.5rem 1.5rem; border-radius: 16px;
+  width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  transform: scale(0.8); transition: transform 0.4s ease;
+}
+.menu-overlay.active .menu-content { transform: scale(1); }
+.menu-content h3 { color: white; margin-bottom: 1.5rem; font-size: 1.6rem; }
+.menu-content ul { list-style: none; }
+.menu-content li { margin: 0.8rem 0; }
+.menu-content a {
+  color: white; text-decoration: none; font-size: 1.1rem; font-weight: 500;
+  display: block; padding: 0.6rem 1.2rem; border-radius: 10px; transition: all 0.3s;
+}
+.menu-content a:hover { background: rgba(255,255,255,0.2); transform: translateX(6px); }
+
+/* MAIN */
+main { 
+  flex: 1; 
+  overflow: hidden;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+}
+
+/* TITLE */
+.page-title {
+  text-align: center;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+/* CHART CONTAINER */
+.chart-container {
+  width: 90%;
+  max-width: 900px;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.chart-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.chart-header {
+  text-align: center;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.chart-header h2 {
+  color: #1e40af;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.chart-subtitle {
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-wrapper canvas {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* CHART ICON */
+#chart-icon {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  padding: 12px;
+  font-size: 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1e40af;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#chart-icon:hover {
+  background: white;
+  transform: translateY(-4px) scale(1.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* INFO BADGES */
+.info-badges {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f1f5f9;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.badge i {
+  font-size: 1rem;
+}
+
+.badge.edc { background: rgba(0, 123, 255, 0.1); color: #0056b3; }
+.badge.top10 { background: rgba(0, 200, 0, 0.1); color: #008000; }
+.badge.mean { background: rgba(255, 165, 0, 0.1); color: #cc6600; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .page-title { font-size: 1.2rem; margin-bottom: 0.8rem; }
+  .chart-container { 
+    width: 95%;
+    padding: 1.2rem; 
+    border-radius: 16px;
+  }
+  .chart-header h2 { font-size: 1.1rem; }
+  .chart-subtitle { font-size: 0.8rem; }
+  .info-badges { gap: 0.5rem; margin-top: 0.8rem; padding-top: 0.8rem; }
+  .badge { padding: 0.35rem 0.7rem; font-size: 0.7rem; }
+  main { padding: 0.8rem 0.5rem; }
+}
+
+@media (max-width: 480px) {
+  header { padding: 0.6rem 1rem; }
+  header h1 { font-size: 1.2rem; }
+  .page-title { font-size: 1rem; margin-bottom: 0.6rem; }
+  .chart-container { 
+    width: 95%;
+    padding: 1rem; 
+  }
+  .chart-header h2 { font-size: 1rem; }
+  .chart-subtitle { font-size: 0.75rem; }
+  .badge { padding: 0.3rem 0.6rem; font-size: 0.65rem; }
+  .info-badges { gap: 0.4rem; margin-top: 0.6rem; padding-top: 0.6rem; }
+  #chart-icon { 
+    width: 44px; 
+    height: 44px; 
+    font-size: 1.2rem;
+    bottom: 12px;
+    left: 12px;
+  }
+  main { padding: 0.6rem 0.5rem; }
+}
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <h1 class="header-title">EDC Paris Business School</h1>
+    <div class="hamburger" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+  </header>
+
+  <!-- MENU OVERLAY -->
+  <div id="menu-overlay" class="menu-overlay">
+    <div class="menu-content">
+      <ul>
+        <li><a href="index.html" onclick="closeMenu()">Accueil</a></li>
+        <li><a href="find.html" onclick="closeMenu()">Recherche d'École</a></li>
+        <li><a href="graph3.html" onclick="closeMenu()">Statistiques</a></li>
+        <li><a href="stats4.html" onclick="closeMenu()">Classement</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <h1 class="page-title">Analyse de Performance</h1>
+    
+    <div class="chart-container">
+      <div class="chart-header">
+        <h2>Comparaison Institutionnelle</h2>
+        <p class="chart-subtitle">Analyse comparative des indicateurs clés de performance</p>
+      </div>
+      
+      <div class="chart-wrapper">
+        <canvas id="radarChart"></canvas>
+      </div>
+
+      
+    </div>
+  </main>
+
+  <a href="edc3.html" id="chart-icon">📊</a>
+
+  <script>
+let radarChart;
+
+const edcScores = {
+  "Bourses": 4,
+  "Qualité Académique": 5,
+  "Opportunités d'Emploi": 4,
+  "Innovation": 5,
+  "International": 5,
+  "Recherche": 3,
+  "Infrastructure": 4,
+  "Sports": 2,
+  "Restauration": 3,
+  "Environnement": 4
+};
+
+const meanScores = {
+  "Bourses": 3,
+  "Qualité Académique": 4,
+  "Opportunités d'Emploi": 4,
+  "Innovation": 4,
+  "International": 4,
+  "Recherche": 4,
+  "Infrastructure": 4,
+  "Sports": 3,
+  "Restauration": 3,
+  "Environnement": 4
+};
+
+const top10Scores = { 
+  "Bourses": 2.17, 
+  "Qualité Académique": 5, 
+  "Opportunités d'Emploi": 4.83, 
+  "Innovation": 4.83, 
+  "International": 4.67, 
+  "Recherche": 4.83, 
+  "Infrastructure": 4.67, 
+  "Sports": 3.5, 
+  "Restauration": 3.67, 
+  "Environnement": 4.5 
+};
+
+const categories = Object.keys(edcScores);
+
+function createRadarChart() {
+  const ctx = document.getElementById('radarChart').getContext('2d');
+
+  const originalData = [
+    categories.map(c => edcScores[c]),
+    categories.map(c => top10Scores[c]),
+    categories.map(c => meanScores[c])
+  ];
+
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: categories,
+      datasets: [
+        {
+          label: 'EDC Paris Business School',
+          data: originalData[0],
+          backgroundColor: 'rgba(0, 123, 255, 0.3)',
+          borderColor: 'rgba(0, 123, 255, 1)',
+          borderWidth: 2,
+          pointBackgroundColor: 'rgba(0, 123, 255, 1)'
+        },
+        {
+          label: 'Top 10%',
+          data: originalData[1],
+          backgroundColor: 'rgba(0, 200, 0, 0.3)',
+          borderColor: 'rgba(0, 200, 0, 1)',
+          borderWidth: 2,
+          pointBackgroundColor: 'rgba(0, 200, 0, 1)'
+        },
+        {
+          label: 'Moyenne Globale',
+          data: originalData[2],
+          backgroundColor: 'rgba(255, 165, 0, 0.3)',
+          borderColor: 'rgba(255, 165, 0, 1)',
+          borderWidth: 2,
+          pointBackgroundColor: 'rgba(255, 165, 0, 1)'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      animation: {
+        duration: 1000,
+        easing: 'easeOutElastic'
+      },
+      scales: {
+        r: {
+          angleLines: { display: true },
+          suggestedMin: 0,
+          suggestedMax: 5,
+          ticks: { stepSize: 1 }
+        }
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          onClick: (e, legendItem, legend) => {
+            const index = legendItem.datasetIndex;
+            const ci = legend.chart;
+            const dataset = ci.data.datasets[index];
+
+            if (ci.isDatasetVisible(index)) {
+              ci.hide(index);
+            } else {
+              const tempData = dataset.data.map(() => 0);
+              dataset.data = tempData;
+              ci.show(index);
+              ci.update();
+              setTimeout(() => {
+                dataset.data = originalData[index];
+                ci.update({
+                  duration: 800,
+                  easing: 'easeOutElastic'
+                });
+              }, 50);
+            }
+          }
+        },
+        tooltip: { enabled: true }
+      }
+    }
+  });
+}
+
+window.onload = () => {
+  createRadarChart();
+};
+
+const menuOverlay = document.getElementById("menu-overlay");
+
+function toggleMenu() {
+  menuOverlay.classList.toggle("active");
+}
+
+function closeMenu() {
+  menuOverlay.classList.remove("active");
+}
+
+menuOverlay.addEventListener("click", function(e) {
+  if (!e.target.closest(".menu-content")) {
+    closeMenu();
+  }
+});
+  </script>
+</body>
+</html>
